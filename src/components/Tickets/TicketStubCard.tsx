@@ -40,6 +40,32 @@ export const TicketStubCard: React.FC<TicketStubCardProps> = ({ booking, onCance
           transform: 'translateY(-3px)',
           borderColor: '#E50914',
         },
+        /* Perforation circle notches match page background in both Dark and Light modes */
+        '&::before, &::after': {
+          content: '""',
+          position: 'absolute',
+          top: '50%',
+          width: '20px',
+          height: '20px',
+          backgroundColor: 'background.default',
+          borderRadius: '50%',
+          transform: 'translateY(-50%)',
+          zIndex: 3,
+        },
+        '&::before': {
+          left: '-10px',
+          boxShadow: isDark
+            ? 'inset -2px 0 4px rgba(0, 0, 0, 0.5)'
+            : 'inset -2px 0 4px rgba(0, 0, 0, 0.08)',
+          borderRight: isDark ? '1px solid rgba(229, 9, 20, 0.3)' : '1px solid rgba(229, 9, 20, 0.2)',
+        },
+        '&::after': {
+          right: '-10px',
+          boxShadow: isDark
+            ? 'inset 2px 0 4px rgba(0, 0, 0, 0.5)'
+            : 'inset 2px 0 4px rgba(0, 0, 0, 0.08)',
+          borderLeft: isDark ? '1px solid rgba(229, 9, 20, 0.3)' : '1px solid rgba(229, 9, 20, 0.2)',
+        },
       }}
     >
       {/* Left Section: Movie Info & Details */}

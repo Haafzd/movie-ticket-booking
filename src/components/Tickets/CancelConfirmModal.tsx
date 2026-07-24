@@ -7,6 +7,7 @@ import {
   Button,
   Typography,
   Box,
+  useTheme,
 } from '@mui/material';
 import type { TicketBooking } from '../../types';
 
@@ -23,6 +24,9 @@ export const CancelConfirmModal: React.FC<CancelConfirmModalProps> = ({
   onClose,
   onConfirmCancel,
 }) => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+
   if (!booking) return null;
 
   const seatDisplay = booking.seats && booking.seats.length > 0 ? booking.seats.join(', ') : 'Umum';
@@ -34,11 +38,12 @@ export const CancelConfirmModal: React.FC<CancelConfirmModalProps> = ({
       slotProps={{
         paper: {
           style: {
-            backgroundColor: '#121726',
+            backgroundColor: theme.palette.background.paper,
+            color: theme.palette.text.primary,
             borderRadius: '8px',
-            border: '1px solid rgba(239, 68, 68, 0.4)',
+            border: isDark ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid rgba(239, 68, 68, 0.3)',
             padding: '8px',
-            boxShadow: '0 16px 40px rgba(0, 0, 0, 0.8)',
+            boxShadow: isDark ? '0 16px 40px rgba(0, 0, 0, 0.8)' : '0 12px 32px rgba(0, 0, 0, 0.15)',
           },
         },
       }}
@@ -50,24 +55,24 @@ export const CancelConfirmModal: React.FC<CancelConfirmModalProps> = ({
       </DialogTitle>
 
       <DialogContent>
-        <Typography variant="body1" sx={{ mb: 2, color: '#CBD5E1' }}>
+        <Typography variant="body1" sx={{ mb: 2, color: 'text.secondary' }}>
           Apakah Anda yakin ingin membatalkan pemesanan tiket untuk film ini?
         </Typography>
         <Box
           sx={{
             p: 2,
             borderRadius: '6px',
-            backgroundColor: 'rgba(9, 12, 21, 0.8)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
+            backgroundColor: isDark ? 'rgba(9, 12, 21, 0.8)' : 'rgba(241, 245, 249, 0.9)',
+            border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.08)',
           }}
         >
-          <Typography variant="h6" sx={{ fontWeight: 700, color: '#FFF', mb: 0.5 }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', mb: 0.5 }}>
             {booking.showTitle}
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Jadwal: {booking.schedule} | Kursi: {seatDisplay} | Jumlah: {booking.quantity} Tiket
           </Typography>
-          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#FFD700', mt: 1 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: isDark ? '#FFD700' : '#D97706', mt: 1 }}>
             Pengembalian Dana: Rp {booking.totalPrice.toLocaleString('id-ID')}
           </Typography>
         </Box>
