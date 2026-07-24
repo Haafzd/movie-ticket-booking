@@ -11,6 +11,7 @@ import {
   Typography,
   Alert,
   Divider,
+  useTheme,
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
@@ -26,6 +27,9 @@ interface AuthModalProps {
 
 export const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }) => {
   const dispatch = useAppDispatch();
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+
   const [tabIndex, setTabIndex] = useState<number>(0); // 0 = Login, 1 = Register
 
   // Login form state
@@ -98,19 +102,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }
       slotProps={{
         paper: {
           style: {
-            backgroundColor: '#121726',
+            backgroundColor: theme.palette.background.paper,
+            color: theme.palette.text.primary,
             borderRadius: '8px',
-            border: '1px solid rgba(229, 9, 20, 0.3)',
+            border: isDark ? '1px solid rgba(229, 9, 20, 0.3)' : '1px solid rgba(229, 9, 20, 0.2)',
             padding: '16px 12px 12px 12px',
             width: '100%',
             maxWidth: '420px',
-            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.8)',
+            boxShadow: isDark ? '0 20px 50px rgba(0, 0, 0, 0.8)' : '0 12px 36px rgba(0, 0, 0, 0.15)',
           },
         },
       }}
     >
       <DialogTitle sx={{ pb: 1, textAlign: 'center', p: 1 }}>
-        <Typography variant="h5" sx={{ fontWeight: 800, color: '#FFF' }}>
+        <Typography variant="h5" sx={{ fontWeight: 800, color: 'text.primary' }}>
           Akun CineVerse
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
@@ -120,7 +125,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }
 
       <DialogContent sx={{ p: 1.5 }}>
         {/* Tabs for Login vs Register */}
-        <Box sx={{ borderBottom: 1, borderColor: 'rgba(255, 255, 255, 0.1)', mb: 3 }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
           <Tabs
             value={tabIndex}
             onChange={(_, newValue) => {
@@ -233,12 +238,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }
         <Divider
           sx={{
             my: 2.5,
-            color: '#94A3B8',
+            color: 'text.secondary',
             fontSize: '0.75rem',
             fontWeight: 700,
             letterSpacing: '1px',
             '&::before, &::after': {
-              borderColor: 'rgba(255, 255, 255, 0.1)',
+              borderColor: 'divider',
             },
           }}
         >
@@ -250,17 +255,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ open, onClose, onSuccess }
           onClick={handleDemoLogin}
           variant="outlined"
           fullWidth
-          startIcon={<FlashOnIcon sx={{ color: '#FFD700' }} />}
+          startIcon={<FlashOnIcon sx={{ color: '#D97706' }} />}
           sx={{
             py: 1.1,
             borderRadius: '6px',
-            borderColor: 'rgba(255, 255, 255, 0.15)',
-            color: '#F8FAFC',
+            borderColor: 'divider',
+            color: 'text.primary',
             fontWeight: 600,
-            backgroundColor: 'rgba(255, 255, 255, 0.03)',
+            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
             '&:hover': {
-              backgroundColor: 'rgba(255, 255, 255, 0.08)',
-              borderColor: 'rgba(255, 255, 255, 0.3)',
+              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
             },
           }}
         >

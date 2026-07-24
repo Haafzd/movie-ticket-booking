@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Container, Typography, Box, Grid, Alert, Button } from '@mui/material';
+import { Container, Typography, Box, Grid, Alert, Button, useTheme } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../store';
 import { fetchShows, setSearchQuery, setSelectedGenre } from '../store/slices/filmSlice';
 import { useDebounce } from '../hooks/useDebounce';
@@ -13,11 +13,13 @@ const ALL_GENRES = ['All', 'Action', 'Drama', 'Comedy', 'Sci-Fi', 'Crime', 'Thri
 
 const CatalogPage: React.FC = () => {
   const dispatch = useAppDispatch();
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+
   const { shows, loading, error, searchQuery, selectedGenre } = useAppSelector((state) => state.film);
   const debouncedQuery = useDebounce(searchQuery, 500);
 
   useEffect(() => {
-    // If search bar is empty but a specific genre chip is selected, fetch shows matching that genre!
     if (!debouncedQuery && selectedGenre !== 'All') {
       dispatch(fetchShows(selectedGenre));
     } else {
@@ -33,7 +35,6 @@ const CatalogPage: React.FC = () => {
     dispatch(setSelectedGenre(genre));
   };
 
-  // Filter client-side by genre if search query is also active
   const filteredShows = shows.filter((show) => {
     if (selectedGenre === 'All') return true;
     return show.genres.some((g) => g.toLowerCase().includes(selectedGenre.toLowerCase()));
@@ -49,7 +50,9 @@ const CatalogPage: React.FC = () => {
           pb: { xs: 3, md: 4 },
           mb: 3,
           borderRadius: '8px',
-          background: 'radial-gradient(ellipse at top, rgba(229, 9, 20, 0.12) 0%, rgba(9, 12, 21, 0) 70%)',
+          background: isDark
+            ? 'radial-gradient(ellipse at top, rgba(229, 9, 20, 0.12) 0%, rgba(9, 12, 21, 0) 70%)'
+            : 'radial-gradient(ellipse at top, rgba(229, 9, 20, 0.08) 0%, rgba(248, 250, 252, 0) 70%)',
         }}
       >
         <Typography
@@ -58,7 +61,10 @@ const CatalogPage: React.FC = () => {
             fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4rem' },
             lineHeight: 1.1,
             mb: 1.5,
-            background: 'linear-gradient(180deg, #FFFFFF 30%, #94A3B8 100%)',
+            color: 'text.primary',
+            background: isDark
+              ? 'linear-gradient(180deg, #FFFFFF 30%, #94A3B8 100%)'
+              : 'linear-gradient(180deg, #0F172A 30%, #475569 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
           }}
@@ -100,14 +106,14 @@ const CatalogPage: React.FC = () => {
               mx: 'auto',
               borderRadius: '8px',
               p: 2.5,
-              backgroundColor: 'rgba(245, 158, 11, 0.08)',
+              backgroundColor: isDark ? 'rgba(245, 158, 11, 0.08)' : 'rgba(245, 158, 11, 0.12)',
               borderColor: 'rgba(245, 158, 11, 0.3)',
               borderStyle: 'solid',
               borderWidth: '1px',
               textAlign: 'center',
             }}
           >
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, color: '#FFF' }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, color: 'text.primary' }}>
               Film Tidak Ditemukan
             </Typography>
             Tidak ada film yang cocok dengan kata kunci "{searchQuery}"

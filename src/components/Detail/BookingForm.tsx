@@ -10,6 +10,7 @@ import {
   Snackbar,
   Chip,
   Tooltip,
+  useTheme,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PersonIcon from '@mui/icons-material/Person';
@@ -42,6 +43,8 @@ const OCCUPIED_SEATS = ['A1', 'A2', 'B4', 'B5', 'C3', 'D6', 'E8']; // Simulated 
 export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
 
   const user = useAppSelector((state) => state.auth.user);
 
@@ -122,10 +125,12 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
   };
 
   const processTicketBooking = () => {
+    if (!user) return;
     const fullScheduleStr = `${dateOptions[selectedDateIndex].fullDateStr} - ${selectedTime}`;
 
     dispatch(
       bookTicket({
+        userId: user.id,
         showId: show.id,
         showTitle: show.name,
         posterUrl: show.image?.medium || show.image?.original || null,
@@ -150,7 +155,6 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
       return;
     }
 
-    // Require Login before ticket booking
     if (!user) {
       setAuthModalOpen(true);
       return;
@@ -163,16 +167,16 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
     <>
       <Card
         sx={{
-          backgroundColor: '#121726',
+          backgroundColor: 'background.paper',
           border: '1px solid rgba(229, 9, 20, 0.4)',
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+          boxShadow: isDark ? '0 8px 24px rgba(0, 0, 0, 0.4)' : '0 4px 16px rgba(0, 0, 0, 0.08)',
           borderRadius: '8px',
           p: 1,
         }}
       >
         <CardContent>
           {/* Header */}
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#FFF', mb: 1 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: 'text.primary', mb: 1 }}>
             Pemesanan Tiket Bioskop
           </Typography>
 
@@ -180,12 +184,12 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
             Pilih tanggal, jadwal jam tayang, dan posisi kursi studio yang Anda inginkan.
           </Typography>
 
-          <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.08)', mb: 2.5 }} />
+          <Divider sx={{ borderColor: 'divider', mb: 2.5 }} />
 
           <Box component="form" onSubmit={handleBookingSubmit}>
             {/* 1. Date Selection */}
             <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: '#E2E8F0' }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: 'text.primary' }}>
                 1. Pilih Tanggal Nonton:
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8 }}>
@@ -206,8 +210,16 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
                         py: 2,
                         px: 0.5,
                         borderRadius: '6px',
-                        backgroundColor: isSelected ? '#E50914' : 'rgba(255, 255, 255, 0.05)',
-                        borderColor: isSelected ? '#E50914' : 'rgba(255, 255, 255, 0.15)',
+                        backgroundColor: isSelected
+                          ? '#E50914'
+                          : isDark
+                          ? 'rgba(255, 255, 255, 0.05)'
+                          : 'rgba(0, 0, 0, 0.04)',
+                        borderColor: isSelected
+                          ? '#E50914'
+                          : isDark
+                          ? 'rgba(255, 255, 255, 0.15)'
+                          : 'rgba(0, 0, 0, 0.12)',
                       }}
                     />
                   );
@@ -217,7 +229,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
 
             {/* 2. Time Slot Selection (Filtered by DateTimeNow) */}
             <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: '#E2E8F0' }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: 'text.primary' }}>
                 2. Pilih Jam Tayang:
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8 }}>
@@ -245,8 +257,16 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
                             py: 2,
                             px: 0.5,
                             borderRadius: '6px',
-                            backgroundColor: isSelected ? '#E50914' : 'rgba(255, 255, 255, 0.05)',
-                            borderColor: isSelected ? '#E50914' : 'rgba(255, 255, 255, 0.15)',
+                            backgroundColor: isSelected
+                              ? '#E50914'
+                              : isDark
+                              ? 'rgba(255, 255, 255, 0.05)'
+                              : 'rgba(0, 0, 0, 0.04)',
+                            borderColor: isSelected
+                              ? '#E50914'
+                              : isDark
+                              ? 'rgba(255, 255, 255, 0.15)'
+                              : 'rgba(0, 0, 0, 0.12)',
                             opacity: slot.isExpired ? 0.4 : 1,
                           }}
                         />
@@ -259,7 +279,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
 
             {/* 3. Interactive Seat Map Grid */}
             <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: '#E2E8F0' }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: 'text.primary' }}>
                 3. Pilih Kursi Studio:
               </Typography>
 
@@ -270,12 +290,12 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
                   py: 0.6,
                   mb: 2,
                   borderRadius: '4px',
-                  background: 'linear-gradient(180deg, rgba(229, 9, 20, 0.4) 0%, rgba(9, 12, 21, 0.2) 100%)',
+                  background: 'linear-gradient(180deg, rgba(229, 9, 20, 0.4) 0%, rgba(9, 12, 21, 0.1) 100%)',
                   borderTop: '2px solid #E50914',
                   textAlign: 'center',
                 }}
               >
-                <Typography variant="caption" sx={{ fontWeight: 800, color: '#F8FAFC', letterSpacing: '2px' }}>
+                <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.primary', letterSpacing: '2px' }}>
                   LAYAR BIOSKOP (SCREEN)
                 </Typography>
               </Box>
@@ -283,10 +303,10 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
               {/* Seat Map */}
               <Box
                 sx={{
-                  backgroundColor: 'rgba(9, 12, 21, 0.7)',
+                  backgroundColor: isDark ? 'rgba(9, 12, 21, 0.7)' : 'rgba(241, 245, 249, 0.8)',
                   p: 2,
                   borderRadius: '8px',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.08)',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 1,
@@ -295,7 +315,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
               >
                 {SEAT_ROWS.map((row) => (
                   <Box key={row} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="caption" sx={{ fontWeight: 700, width: 14, color: '#94A3B8' }}>
+                    <Typography variant="caption" sx={{ fontWeight: 700, width: 14, color: 'text.secondary' }}>
                       {row}
                     </Typography>
 
@@ -305,14 +325,14 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
                         const isOccupied = OCCUPIED_SEATS.includes(seatId);
                         const isSelected = selectedSeats.includes(seatId);
 
-                        let bgColor = 'rgba(255, 255, 255, 0.1)';
-                        let borderColor = 'rgba(255, 255, 255, 0.2)';
-                        let color = '#CBD5E1';
+                        let bgColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(203, 213, 225, 0.5)';
+                        let borderColor = isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(148, 163, 184, 0.5)';
+                        let color = isDark ? '#CBD5E1' : '#334155';
 
                         if (isOccupied) {
-                          bgColor = 'rgba(100, 116, 139, 0.3)';
+                          bgColor = isDark ? 'rgba(100, 116, 139, 0.3)' : 'rgba(203, 213, 225, 0.8)';
                           borderColor = 'rgba(100, 116, 139, 0.4)';
-                          color = '#64748B';
+                          color = '#94A3B8';
                         } else if (isSelected) {
                           bgColor = '#E50914';
                           borderColor = '#FF2E4D';
@@ -361,8 +381,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
               sx={{
                 p: 2,
                 borderRadius: '8px',
-                backgroundColor: 'rgba(9, 12, 21, 0.7)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                backgroundColor: isDark ? 'rgba(9, 12, 21, 0.7)' : 'rgba(241, 245, 249, 0.8)',
+                border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.08)',
                 mb: 2.5,
               }}
             >
@@ -370,7 +390,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
                 <Typography variant="body2" color="text.secondary">
                   Tanggal & Jam:
                 </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: '#FFF' }}>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
                   {dateOptions[selectedDateIndex].label} - {selectedTime}
                 </Typography>
               </Box>
@@ -379,7 +399,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
                 <Typography variant="body2" color="text.secondary">
                   Kursi Dipilih:
                 </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 700, color: '#FFD700' }}>
+                <Typography variant="body2" sx={{ fontWeight: 700, color: '#E50914' }}>
                   {selectedSeats.length > 0 ? selectedSeats.sort().join(', ') : '-'}
                 </Typography>
               </Box>
@@ -388,18 +408,18 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
                 <Typography variant="body2" color="text.secondary">
                   Total Jumlah Tiket:
                 </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
                   {quantity} Tiket
                 </Typography>
               </Box>
 
-              <Divider sx={{ my: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+              <Divider sx={{ my: 1, borderColor: 'divider' }} />
 
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#FFF' }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary' }}>
                   Total Bayar:
                 </Typography>
-                <Typography variant="h5" sx={{ fontWeight: 800, color: '#FFD700' }}>
+                <Typography variant="h5" sx={{ fontWeight: 800, color: isDark ? '#FFD700' : '#D97706' }}>
                   Rp {totalPrice.toLocaleString('id-ID')}
                 </Typography>
               </Box>

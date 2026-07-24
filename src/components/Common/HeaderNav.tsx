@@ -33,7 +33,10 @@ export const HeaderNav: React.FC = () => {
 
   const user = useAppSelector((state) => state.auth.user);
   const bookings = useAppSelector((state) => state.booking.bookings);
-  const totalTickets = bookings.reduce((sum, b) => sum + b.quantity, 0);
+
+  // Tickets count belongs only to logged in user
+  const userBookings = user ? bookings.filter((b) => b.userId === user.id) : [];
+  const totalTickets = userBookings.reduce((sum, b) => sum + b.quantity, 0);
 
   const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -130,7 +133,7 @@ export const HeaderNav: React.FC = () => {
                 component={RouterLink}
                 to="/my-tickets"
                 startIcon={
-                  <Badge badgeContent={totalTickets} color="primary" max={99}>
+                  <Badge badgeContent={user ? totalTickets : 0} color="primary" max={99}>
                     <ConfirmationNumberIcon />
                   </Badge>
                 }

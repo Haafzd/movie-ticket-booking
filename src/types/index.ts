@@ -40,15 +40,16 @@ export interface SearchResult {
 
 export interface TicketBooking {
   id: string; // Unique UUID/Timestamp ID
+  userId?: string; // ID of the user who booked this ticket
   showId: number;
   showTitle: string;
   posterUrl: string | null;
   schedule: string; // e.g. "Jumat, 24 Jul 2026 - 20:00 WIB"
-  bookingDateOnly?: string; // Date portion
-  bookingTimeOnly?: string; // Time portion
+  bookingDateOnly?: string;
+  bookingTimeOnly?: string;
   quantity: number;
   seats?: string[]; // e.g. ["A3", "A4"]
-  pricePerTicket: number; // Rp 50.000
+  pricePerTicket: number;
   totalPrice: number;
   bookingDate: string; // ISO string
 }

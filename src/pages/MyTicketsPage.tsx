@@ -1,19 +1,29 @@
 import React, { useState } from 'react';
-import { Container, Typography, Box, Button, Alert, Snackbar } from '@mui/material';
+import { Container, Typography, Box, Button, Alert, Snackbar, useTheme } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import PersonIcon from '@mui/icons-material/Person';
 import { Link as RouterLink } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store';
 import { cancelBooking } from '../store/slices/bookingSlice';
 import { TicketStubCard } from '../components/Tickets/TicketStubCard';
 import { CancelConfirmModal } from '../components/Tickets/CancelConfirmModal';
+import { AuthModal } from '../components/Auth/AuthModal';
 import type { TicketBooking } from '../types';
 
 const MyTicketsPage: React.FC = () => {
   const dispatch = useAppDispatch();
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+
+  const user = useAppSelector((state) => state.auth.user);
   const bookings = useAppSelector((state) => state.booking.bookings);
+
+  // Tickets belong exclusively to the logged in user
+  const userBookings = user ? bookings.filter((b) => b.userId === user.id) : [];
 
   const [selectedBookingForCancel, setSelectedBookingForCancel] = useState<TicketBooking | null>(null);
   const [showCancelToast, setShowCancelToast] = useState<boolean>(false);
+  const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
 
   const handleOpenCancelModal = (booking: TicketBooking) => {
     setSelectedBookingForCancel(booking);
@@ -36,6 +46,7 @@ const MyTicketsPage: React.FC = () => {
             fontFamily: '"Bebas Neue", sans-serif',
             letterSpacing: '1px',
             mb: 1,
+            color: 'text.primary',
           }}
         >
           Daftar Tiket Bioskop Terpesan
@@ -47,7 +58,40 @@ const MyTicketsPage: React.FC = () => {
       </Box>
 
       {/* Main Content */}
-      {bookings.length === 0 ? (
+      {!user ? (
+        <Box sx={{ textAlign: 'center', py: 6 }}>
+          <Alert
+            severity="warning"
+            icon={false}
+            sx={{
+              maxWidth: 500,
+              mx: 'auto',
+              borderRadius: '8px',
+              p: 2.5,
+              backgroundColor: isDark ? 'rgba(245, 158, 11, 0.08)' : 'rgba(245, 158, 11, 0.12)',
+              borderColor: 'rgba(245, 158, 11, 0.3)',
+              borderStyle: 'solid',
+              borderWidth: '1px',
+              textAlign: 'center',
+            }}
+          >
+            <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, color: 'text.primary' }}>
+              Silakan Masuk ke Akun Anda
+            </Typography>
+            Anda belum masuk ke akun CineVerse. Silakan masuk atau daftar akun baru terlebih dahulu untuk melihat tiket bioskop Anda.
+          </Alert>
+
+          <Button
+            variant="contained"
+            size="large"
+            startIcon={<PersonIcon />}
+            onClick={() => setAuthModalOpen(true)}
+            sx={{ mt: 3, py: 1.2, px: 3, fontWeight: 700, borderRadius: '6px' }}
+          >
+            Masuk / Daftar Akun
+          </Button>
+        </Box>
+      ) : userBookings.length === 0 ? (
         <Box sx={{ textAlign: 'center', py: 6 }}>
           <Alert
             severity="info"
@@ -57,17 +101,17 @@ const MyTicketsPage: React.FC = () => {
               mx: 'auto',
               borderRadius: '8px',
               p: 2.5,
-              backgroundColor: 'rgba(59, 130, 246, 0.08)',
+              backgroundColor: isDark ? 'rgba(59, 130, 246, 0.08)' : 'rgba(59, 130, 246, 0.12)',
               borderColor: 'rgba(59, 130, 246, 0.3)',
               borderStyle: 'solid',
               borderWidth: '1px',
               textAlign: 'center',
             }}
           >
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, color: '#FFF' }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, color: 'text.primary' }}>
               Belum Ada Tiket Terpesan
             </Typography>
-            Anda belum memesan tiket film apapun saat ini. Jelajahi katalog bioskop CineVerse dan tentukan jadwal tontonanmu!
+            Halo {user.name}, Anda belum memesan tiket film apapun. Jelajahi katalog bioskop CineVerse dan tentukan jadwal tontonanmu!
           </Alert>
 
           <Button
@@ -82,7 +126,7 @@ const MyTicketsPage: React.FC = () => {
         </Box>
       ) : (
         <Box>
-          {bookings.map((booking) => (
+          {userBookings.map((booking) => (
             <TicketStubCard
               key={booking.id}
               booking={booking}
@@ -98,6 +142,12 @@ const MyTicketsPage: React.FC = () => {
         booking={selectedBookingForCancel}
         onClose={() => setSelectedBookingForCancel(null)}
         onConfirmCancel={handleConfirmCancel}
+      />
+
+      {/* Auth Modal Trigger */}
+      <AuthModal
+        open={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
       />
 
       {/* Cancel Toast Notification */}

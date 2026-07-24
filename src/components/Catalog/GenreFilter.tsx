@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Chip } from '@mui/material';
+import { Box, Chip, useTheme } from '@mui/material';
 
 interface GenreFilterProps {
   genres: string[];
@@ -12,6 +12,9 @@ export const GenreFilter: React.FC<GenreFilterProps> = ({
   selectedGenre,
   onSelectGenre,
 }) => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+
   return (
     <Box
       sx={{
@@ -37,10 +40,23 @@ export const GenreFilter: React.FC<GenreFilterProps> = ({
               py: 0.5,
               fontWeight: isSelected ? 700 : 500,
               borderRadius: '6px',
-              backgroundColor: isSelected ? '#E50914' : 'rgba(18, 23, 38, 0.6)',
-              borderColor: isSelected ? '#E50914' : 'rgba(255, 255, 255, 0.12)',
+              color: isSelected ? '#FFF' : 'text.primary',
+              backgroundColor: isSelected
+                ? '#E50914'
+                : isDark
+                ? 'rgba(18, 23, 38, 0.6)'
+                : 'rgba(255, 255, 255, 0.9)',
+              borderColor: isSelected
+                ? '#E50914'
+                : isDark
+                ? 'rgba(255, 255, 255, 0.12)'
+                : 'rgba(0, 0, 0, 0.15)',
               '&:hover': {
-                backgroundColor: isSelected ? '#FF2E4D' : 'rgba(229, 9, 20, 0.15)',
+                backgroundColor: isSelected
+                  ? '#FF2E4D'
+                  : isDark
+                  ? 'rgba(229, 9, 20, 0.15)'
+                  : 'rgba(229, 9, 20, 0.08)',
                 borderColor: '#E50914',
               },
             }}

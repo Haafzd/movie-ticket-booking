@@ -120,7 +120,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ show }) => {
             fontSize: '1rem',
             lineHeight: 1.3,
             mb: 1.5,
-            color: '#F8FAFC',
+            color: 'text.primary',
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
@@ -141,9 +141,8 @@ export const MovieCard: React.FC<MovieCardProps> = ({ show }) => {
                 fontSize: '0.68rem',
                 height: 22,
                 borderRadius: '4px',
-                backgroundColor: 'rgba(255, 255, 255, 0.06)',
-                color: '#94A3B8',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                color: 'text.secondary',
+                border: '1px solid rgba(148, 163, 184, 0.25)',
               }}
             />
           ))}
