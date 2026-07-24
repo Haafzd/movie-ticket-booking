@@ -1,25 +1,53 @@
-# Movie Ticket Booking App
+# 🎬 CineVerse - Modern Movie Ticket Booking Web Application
 
-Aplikasi Katalog & Pemesanan Tiket Film berbasis React, TypeScript, dan Material UI (MUI) yang mengonsumsi data dari TVMaze API publik. Pemesanan tiket dikelola menggunakan Redux Toolkit dan disimpan secara persisten di `localStorage`.
+Aplikasi web bioskop modern **CineVerse** berbasis React 18, TypeScript, dan Material UI (MUI) v6 yang mengonsumsi data dari TVMaze Public REST API. Platform ini menyediakan pengalaman pemesanan tiket bioskop digital interaktif lengkap dengan pemilihan posisi kursi studio, jadwal waktu tayang real-time, autentikasi pengguna, mode tema (Dark/Light Mode), serta tampilan e-ticket fisik digital yang tersimpan persisten di Redux Toolkit & `localStorage`.
 
-## 🚀 Fitur Utama
+---
 
-- **Pencarian Film**: Cari judul film menggunakan search bar (MUI TextField) dengan auto-debounce 500ms.
-- **Katalog Film**: Menampilkan hasil pencarian dalam layout responsive grid MUI Card (Poster, Judul, Genre, Rating).
-- **Detail Film**: Halaman detail dinamis (`/show/:id`) yang memuat poster HD, summary HTML, rating, genre, dan form pemesanan tiket.
-- **Simulasi Pesan Tiket**: Pengguna memilih jadwal tayang dan jumlah tiket (1-10) untuk ditambahkan ke global state Redux.
-- **Tiket Saya (`/my-tickets`)**: Halaman khusus untuk melihat semua tiket yang dipesan (tabel MUI) lengkap dengan fitur pembatalan tiket.
-- **Persistensi Data**: Sinkronisasi data tiket dengan `localStorage` menggunakan custom middleware Redux.
+## 🚀 Fitur Utama & Keunggulan
+
+### 1. 🔍 Katalog & Filter Film Interaktif (`/`)
+- **Pencarian Real-Time**: Pencarian judul film menggunakan SearchBar dengan custom hook `useDebounce` 500ms untuk efisiensi API call.
+- **Filter Genre Dinamis**: Filter chip genre (*Action, Drama, Comedy, Sci-Fi, Crime, Thriller, Adventure, Animation, Horror*). Mengklik chip genre otomatis melakukan query pencarian genre ke TVMaze API jika search bar kosong.
+- **Katalog Populer Default**: Memuat daftar film populer secara otomatis dari TVMaze API saat pertama kali dibuka.
+- **Movie Card Sleek UI**: Kartu film modern dengan rating bintang emas, tag genre, thumbnail HD, dan tombol pemesanan tiket cepat saat hover.
+
+### 2. 🍿 Halaman Detail & Pemesanan Tiket Bioskop (`/show/:id`)
+- **Movie Hero Banner**: Banner sinematik dengan backdrop blur dari poster film, informasi runtime, bahasa, tahun rilis, rating, dan sinopsis yang disanitasi.
+- **Pilih Tanggal Tayang**: Pemilihan hari/tanggal tayang bioskop (*Hari Ini, Besok, Lusa, dst.*).
+- **Validasi Jam Tayang Real-Time (`DateTimeNow`)**: Slot jam tayang yang sudah lewat dari jam lokal sekarang pada hari ini (*misal 10:00 WIB*) secara otomatis terkunci (*disabled*) dan tidak dapat dipilih.
+- **Visual Cinema Seat Picker Grid**: Grid peta kursi studio bioskop (Baris A s/d E, Nomor 1 s/d 8) lengkap dengan status *Layar Bioskop*, *Tersedia*, *Terisi (Occupied)*, dan *Dipilih*.
+- **Kalkulasi Otomatis**: Menghitung otomatis jumlah tiket, daftar nomor kursi (misal: `B2, B3, C4`), dan total biaya pembayaran (`Rp 50.000 / tiket`).
+
+### 3. 🔐 Sistem Autentikasi Pengguna (Login & Register Modal)
+- **Modal Autentikasi (`AuthModal`)**:
+  - Tab **Masuk (Login)**: Input Email & Password.
+  - Tab **Daftar (Register)**: Input Nama Lengkap, Email, & Password.
+  - Tombol **Masuk Cepat (Akun Demo)** untuk simulasi 1-klik.
+- **Proteksi Pemesanan**: Jika pengguna belum login dan menekan tombol *"Pesan Tiket"*, modal login/register akan muncul secara otomatis.
+- **Integrasi Profil Header**: Avatar dan Nama Pengguna beserta dropdown menu **Logout** di Navbar kanan.
+- **Isolasi Tiket Pengguna (User Session Scoping)**: Tiket bioskop yang dipesan tersimpan secara eksklusif berdasarkan `userId` pengguna. Pengguna tamu (*unauthenticated*) tidak dapat melihat tiket milik pengguna lain.
+
+### 4. 🎟️ Tiket Saya & Digital E-Ticket Stub (`/my-tickets`)
+- **Perforated Ticket Stub Card**: Tampilan tiket fisik digital khas bioskop lengkap dengan kode barcode QR, ID Tiket, Judul Film, Tanggal & Jam Tayang, Nomor Kursi Terpilih, dan Total Pembayaran.
+- **Pembatalan Tiket**: Modal konfirmasi pembatalan tiket lengkap dengan kalkulasi pengembalian dana (*refund*) dan pembaruan state instan.
+
+### 5. 🌓 Dynamic Dark Mode & Light Mode Theme Toggle
+- **ThemeModeProvider**: Pengatur mode tema global berbasis React Context yang mendukung beralih antara **Mode Gelap (Cinematic Dark)** dan **Mode Terang (Clean Light)**.
+- **High Contrast Styling**: Penyesuaian kontras warna otomatis pada teks, kartu film, hero banner, chip, dan modal dialog untuk keterbacaan maksimal di kedua mode tema.
+- **Persistensi Tema**: Mode tema pilihan tersimpan secara persisten di `localStorage`.
 
 ---
 
 ## 🛠️ Tech Stack & Dependencies
 
-- **Frontend Core**: React 18, TypeScript 5, Vite (Build Tool)
-- **UI & Styling**: Material UI (MUI) v5 (`@mui/material`, `@emotion/react`, `@emotion/styled`), MUI Icons (`@mui/icons-material`)
+- **Frontend Core**: React 18, TypeScript 5, Vite (Fast Build Tool & HMR)
+- **UI Framework & Styling**: Material UI (MUI) v6 (`@mui/material`, `@emotion/react`, `@emotion/styled`)
+- **SVG Icons**: `@mui/icons-material` (100% SVG Vector Icons, tanpa emoji)
 - **State Management**: Redux Toolkit (`@reduxjs/toolkit`), React Redux
-- **Routing**: React Router DOM v6
-- **Data Source**: [TVMaze API](https://www.tvmaze.com/api) (Public REST API)
+- **Routing**: React Router DOM v6 (dengan Code Splitting & React.lazy)
+- **Typography**: Google Fonts (*Bebas Neue* & *Plus Jakarta Sans*)
+- **Data Source**: [TVMaze REST API](https://www.tvmaze.com/api) (Public Movies/Shows REST API)
 
 ---
 
@@ -27,57 +55,71 @@ Aplikasi Katalog & Pemesanan Tiket Film berbasis React, TypeScript, dan Material
 
 ```text
 movie-ticket-booking/
-├── public/                 # Aset publik statis (favicon, svg)
+├── docs/                   # Dokumen PRD & Spesifikasi Desain Superpowers
+├── public/                 # Aset statis (favicon, manifest)
 └── src/
+    ├── api/                # Service API TVMaze (fetchSearchShowsApi, fetchShowDetailApi)
     ├── assets/             # Aset gambar & ilustrasi
-    ├── components/         # Reusable UI components (FilmCard, LoadingState, dll)
-    ├── hooks/              # Custom typed hooks Redux (useAppDispatch, useAppSelector)
-    ├── pages/              # Komponen halaman (KatalogPage, DetailPage, TiketSayaPage)
-    ├── store/              # Konfigurasi Redux Store, Slices, & LocalStorage Middleware
-    ├── types/              # Deklarasi Type/Interface TypeScript (film.ts, booking.ts)
-    ├── App.tsx             # Root component & Konfigurasi Route (React Router DOM)
-    ├── main.tsx            # Entry point aplikasi
-    └── vite-env.d.ts       # Type definitions untuk Vite
+    ├── components/
+    │   ├── Auth/           # Modal Login & Register (AuthModal.tsx)
+    │   ├── Catalog/        # SearchBar, GenreFilter, MovieCard
+    │   ├── Common/         # HeaderNav, Footer, LoadingSkeleton, ErrorAlert
+    │   ├── Detail/         # MovieHero, BookingForm (Seat Map Grid)
+    │   └── Tickets/        # TicketStubCard, CancelConfirmModal
+    ├── context/            # ThemeModeContext.tsx (Dark/Light mode switcher)
+    ├── hooks/              # Custom hook (useDebounce, Redux typed hooks)
+    ├── pages/              # Halaman utama (CatalogPage, MovieDetailPage, MyTicketsPage, NotFoundPage)
+    ├── store/              # Redux Store, slices (filmSlice, bookingSlice, authSlice), & localStorageMiddleware
+    ├── theme/              # Konfigurasi MUI Theme (theme.ts - getCustomTheme)
+    ├── types/              # Deklarasi Interface TypeScript (index.ts)
+    ├── App.tsx             # Root Component & Layout Provider
+    ├── index.css           # Global CSS & Glassmorphism styles
+    └── main.tsx            # Entry point aplikasi
 ```
 
 ---
 
 ## 💻 Cara Instalasi & Menjalankan Proyek
 
-### 1. Kloning / Buka Folder Proyek
-Masuk ke direktori proyek:
+### 1. Kloning / Masuk ke Folder Proyek
 ```bash
-cd C:\Users\LEGION\Documents\Bootcamp\project\movie-ticket-booking
+cd c:\Users\LEGION\Documents\Bootcamp\project\movie-ticket-booking
 ```
 
 ### 2. Instalasi Dependensi
-Jalankan perintah berikut untuk menginstal semua package wajib:
 ```bash
 npm install
 ```
 
-*Jika instalasi package tambahan MUI dan Redux belum terpasang otomatis:*
-```bash
-npm install @mui/material @emotion/react @emotion/styled @mui/icons-material @reduxjs/toolkit react-redux react-router-dom
-```
-
 ### 3. Jalankan Dev Server
-Jalankan aplikasi di mode development:
 ```bash
 npm run dev
 ```
-Aplikasi akan berjalan secara lokal di `http://localhost:5173`.
+Buka browser Anda di `http://localhost:5173`.
 
-### 4. Build untuk Produksi
-Untuk kompilasi produksi (output di folder `dist`):
+### 4. Build untuk Produksi & Type-Check
 ```bash
 npm run build
 ```
 
 ---
 
-## 📝 Catatan Data Simulasi (API TVMaze)
-- Pencarian dan detail film langsung mengonsumsi data real-time dari:
-  - Pencarian: `https://api.tvmaze.com/search/shows?q={query}`
-  - Detail: `https://api.tvmaze.com/shows/{id}`
-- Jadwal tayang dan harga tiket (`Rp50.000`) bersifat dummy di sisi client untuk kebutuhan simulasi pemesanan.
+## 🔀 Git Branching Strategy & Scheduled Timeline
+
+Proyek ini dikembangkan menggunakan *Feature Branching Strategy* dengan riwayat commit dan merge bertahap (*scheduled commit history*):
+
+- **`develop`**: Branch integrasi utama seluruh fitur.
+- **`feature/core-theme`**: Setup TypeScript types, Google Fonts, & MUI Theme dasar.
+- **`feature/api-store`**: Service API TVMaze, Redux slices, & localStorage middleware.
+- **`feature/catalog-page`**: SearchBar dengan debounce 500ms, Genre Filter, & Movie Card grid.
+- **`feature/detail-page`**: Movie Hero backdrop, sinopsis, & kustomisasi detail film.
+- **`feature/my-tickets`**: Halaman Tiket Saya & komponen perforated E-Ticket Stub.
+- **`feature/auth-system`**: Modal Login & Register, Akun Demo, & Redux `authSlice`.
+- **`feature/theme-toggle`**: Fitur Dark/Light Mode context & Header toggle switcher.
+- **`fix/light-mode-contrast`**: Perbaikan kontras Light Mode & isolasi tiket per `userId`.
+
+---
+
+## 📝 Catatan Data API & Lisensi
+- Data film diisi secara dinamis dari **[TVMaze Public API](https://www.tvmaze.com/api)**.
+- Dibuat untuk kebutuhan tugas bootcamp / portofolio aplikasi web React & TypeScript.
