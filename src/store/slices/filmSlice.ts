@@ -8,7 +8,7 @@ const initialState: FilmState = {
   selectedShow: null,
   loading: false,
   error: null,
-  searchQuery: '', // Empty query loads general popular catalog shows by default
+  searchQuery: '',
   selectedGenre: 'All',
 };
 
@@ -19,7 +19,14 @@ export const fetchShows = createAsyncThunk(
       if (!query || query.trim() === '') {
         return await fetchDefaultShowsApi();
       }
-      return await fetchSearchShowsApi(query);
+      
+      // Map genre keywords to TVMaze search terms for better result accuracy
+      let searchKeyword = query;
+      if (query.toLowerCase() === 'animation') {
+        searchKeyword = 'Anime'; // TVMaze maps animated shows to Anime / Animated keywords
+      }
+
+      return await fetchSearchShowsApi(searchKeyword);
     } catch (error) {
       if (error instanceof Error) {
         return rejectWithValue(error.message);

@@ -12,9 +12,11 @@ import {
   Tooltip,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import PersonIcon from '@mui/icons-material/Person';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch } from '../../store';
+import { useAppDispatch, useAppSelector } from '../../store';
 import { bookTicket } from '../../store/slices/bookingSlice';
+import { AuthModal } from '../Auth/AuthModal';
 import type { Show } from '../../types';
 
 interface BookingFormProps {
@@ -41,6 +43,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
+  const user = useAppSelector((state) => state.auth.user);
+
   // Generate Date Options for Today and Next 3 Days
   const dateOptions = useMemo(() => {
     const days = [];
@@ -64,6 +68,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
   }, []);
 
   const [selectedDateIndex, setSelectedDateIndex] = useState<number>(0);
+  const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
   
   // Real-time time slot availability calculation
   const timeSlots = useMemo(() => {
@@ -116,14 +121,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
     }
   };
 
-  const handleBookingSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (selectedSeats.length === 0) {
-      setFormError('Silakan pilih minimal 1 kursi bioskop.');
-      return;
-    }
-
+  const processTicketBooking = () => {
     const fullScheduleStr = `${dateOptions[selectedDateIndex].fullDateStr} - ${selectedTime}`;
 
     dispatch(
@@ -144,303 +142,334 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
     setShowSuccessToast(true);
   };
 
+  const handleBookingSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (selectedSeats.length === 0) {
+      setFormError('Silakan pilih minimal 1 kursi bioskop.');
+      return;
+    }
+
+    // Require Login before ticket booking
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+
+    processTicketBooking();
+  };
+
   return (
-    <Card
-      sx={{
-        backgroundColor: '#121726',
-        border: '1px solid rgba(229, 9, 20, 0.4)',
-        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
-        borderRadius: '8px',
-        p: 1,
-      }}
-    >
-      <CardContent>
-        {/* Header */}
-        <Typography variant="h5" sx={{ fontWeight: 700, color: '#FFF', mb: 1 }}>
-          Pemesanan Tiket Bioskop
-        </Typography>
+    <>
+      <Card
+        sx={{
+          backgroundColor: '#121726',
+          border: '1px solid rgba(229, 9, 20, 0.4)',
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+          borderRadius: '8px',
+          p: 1,
+        }}
+      >
+        <CardContent>
+          {/* Header */}
+          <Typography variant="h5" sx={{ fontWeight: 700, color: '#FFF', mb: 1 }}>
+            Pemesanan Tiket Bioskop
+          </Typography>
 
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
-          Pilih tanggal, jadwal jam tayang, dan posisi kursi studio yang Anda inginkan.
-        </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
+            Pilih tanggal, jadwal jam tayang, dan posisi kursi studio yang Anda inginkan.
+          </Typography>
 
-        <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.08)', mb: 2.5 }} />
+          <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.08)', mb: 2.5 }} />
 
-        <Box component="form" onSubmit={handleBookingSubmit}>
-          {/* 1. Date Selection */}
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: '#E2E8F0' }}>
-              1. Pilih Tanggal Nonton:
-            </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8 }}>
-              {dateOptions.map((option) => {
-                const isSelected = selectedDateIndex === option.index;
-                return (
-                  <Chip
-                    key={option.index}
-                    label={option.label}
-                    onClick={() => {
-                      setSelectedDateIndex(option.index);
-                      setFormError(null);
-                    }}
-                    color={isSelected ? 'primary' : 'default'}
-                    variant={isSelected ? 'filled' : 'outlined'}
-                    sx={{
-                      fontWeight: 700,
-                      py: 2,
-                      px: 0.5,
-                      borderRadius: '6px',
-                      backgroundColor: isSelected ? '#E50914' : 'rgba(255, 255, 255, 0.05)',
-                      borderColor: isSelected ? '#E50914' : 'rgba(255, 255, 255, 0.15)',
-                    }}
-                  />
-                );
-              })}
-            </Box>
-          </Box>
-
-          {/* 2. Time Slot Selection (Filtered by DateTimeNow) */}
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: '#E2E8F0' }}>
-              2. Pilih Jam Tayang:
-            </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8 }}>
-              {timeSlots.map((slot) => {
-                const isSelected = selectedTime === slot.label && !slot.isExpired;
-                return (
-                  <Tooltip
-                    key={slot.label}
-                    title={slot.isExpired ? 'Jadwal tayang sudah lewat' : 'Jadwal tersedia'}
-                  >
-                    <span>
-                      <Chip
-                        label={slot.isExpired ? `${slot.label} (Lewat)` : slot.label}
-                        disabled={slot.isExpired}
-                        onClick={() => {
-                          if (!slot.isExpired) {
-                            setSelectedTime(slot.label);
-                            setFormError(null);
-                          }
-                        }}
-                        color={isSelected ? 'primary' : 'default'}
-                        variant={isSelected ? 'filled' : 'outlined'}
-                        sx={{
-                          fontWeight: 700,
-                          py: 2,
-                          px: 0.5,
-                          borderRadius: '6px',
-                          backgroundColor: isSelected ? '#E50914' : 'rgba(255, 255, 255, 0.05)',
-                          borderColor: isSelected ? '#E50914' : 'rgba(255, 255, 255, 0.15)',
-                          opacity: slot.isExpired ? 0.4 : 1,
-                        }}
-                      />
-                    </span>
-                  </Tooltip>
-                );
-              })}
-            </Box>
-          </Box>
-
-          {/* 3. Interactive Seat Map Grid */}
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: '#E2E8F0' }}>
-              3. Pilih Kursi Studio:
-            </Typography>
-
-            {/* Screen Banner */}
-            <Box
-              sx={{
-                width: '100%',
-                py: 0.6,
-                mb: 2,
-                borderRadius: '4px',
-                background: 'linear-gradient(180deg, rgba(229, 9, 20, 0.4) 0%, rgba(9, 12, 21, 0.2) 100%)',
-                borderTop: '2px solid #E50914',
-                textAlign: 'center',
-              }}
-            >
-              <Typography variant="caption" sx={{ fontWeight: 800, color: '#F8FAFC', letterSpacing: '2px' }}>
-                LAYAR BIOSKOP (SCREEN)
+          <Box component="form" onSubmit={handleBookingSubmit}>
+            {/* 1. Date Selection */}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: '#E2E8F0' }}>
+                1. Pilih Tanggal Nonton:
               </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8 }}>
+                {dateOptions.map((option) => {
+                  const isSelected = selectedDateIndex === option.index;
+                  return (
+                    <Chip
+                      key={option.index}
+                      label={option.label}
+                      onClick={() => {
+                        setSelectedDateIndex(option.index);
+                        setFormError(null);
+                      }}
+                      color={isSelected ? 'primary' : 'default'}
+                      variant={isSelected ? 'filled' : 'outlined'}
+                      sx={{
+                        fontWeight: 700,
+                        py: 2,
+                        px: 0.5,
+                        borderRadius: '6px',
+                        backgroundColor: isSelected ? '#E50914' : 'rgba(255, 255, 255, 0.05)',
+                        borderColor: isSelected ? '#E50914' : 'rgba(255, 255, 255, 0.15)',
+                      }}
+                    />
+                  );
+                })}
+              </Box>
             </Box>
 
-            {/* Seat Map */}
+            {/* 2. Time Slot Selection (Filtered by DateTimeNow) */}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: '#E2E8F0' }}>
+                2. Pilih Jam Tayang:
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8 }}>
+                {timeSlots.map((slot) => {
+                  const isSelected = selectedTime === slot.label && !slot.isExpired;
+                  return (
+                    <Tooltip
+                      key={slot.label}
+                      title={slot.isExpired ? 'Jadwal tayang sudah lewat' : 'Jadwal tersedia'}
+                    >
+                      <span>
+                        <Chip
+                          label={slot.isExpired ? `${slot.label} (Lewat)` : slot.label}
+                          disabled={slot.isExpired}
+                          onClick={() => {
+                            if (!slot.isExpired) {
+                              setSelectedTime(slot.label);
+                              setFormError(null);
+                            }
+                          }}
+                          color={isSelected ? 'primary' : 'default'}
+                          variant={isSelected ? 'filled' : 'outlined'}
+                          sx={{
+                            fontWeight: 700,
+                            py: 2,
+                            px: 0.5,
+                            borderRadius: '6px',
+                            backgroundColor: isSelected ? '#E50914' : 'rgba(255, 255, 255, 0.05)',
+                            borderColor: isSelected ? '#E50914' : 'rgba(255, 255, 255, 0.15)',
+                            opacity: slot.isExpired ? 0.4 : 1,
+                          }}
+                        />
+                      </span>
+                    </Tooltip>
+                  );
+                })}
+              </Box>
+            </Box>
+
+            {/* 3. Interactive Seat Map Grid */}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: '#E2E8F0' }}>
+                3. Pilih Kursi Studio:
+              </Typography>
+
+              {/* Screen Banner */}
+              <Box
+                sx={{
+                  width: '100%',
+                  py: 0.6,
+                  mb: 2,
+                  borderRadius: '4px',
+                  background: 'linear-gradient(180deg, rgba(229, 9, 20, 0.4) 0%, rgba(9, 12, 21, 0.2) 100%)',
+                  borderTop: '2px solid #E50914',
+                  textAlign: 'center',
+                }}
+              >
+                <Typography variant="caption" sx={{ fontWeight: 800, color: '#F8FAFC', letterSpacing: '2px' }}>
+                  LAYAR BIOSKOP (SCREEN)
+                </Typography>
+              </Box>
+
+              {/* Seat Map */}
+              <Box
+                sx={{
+                  backgroundColor: 'rgba(9, 12, 21, 0.7)',
+                  p: 2,
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 1,
+                  alignItems: 'center',
+                }}
+              >
+                {SEAT_ROWS.map((row) => (
+                  <Box key={row} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="caption" sx={{ fontWeight: 700, width: 14, color: '#94A3B8' }}>
+                      {row}
+                    </Typography>
+
+                    <Box sx={{ display: 'flex', gap: 0.8 }}>
+                      {Array.from({ length: SEATS_PER_ROW }, (_, i) => i + 1).map((col) => {
+                        const seatId = `${row}${col}`;
+                        const isOccupied = OCCUPIED_SEATS.includes(seatId);
+                        const isSelected = selectedSeats.includes(seatId);
+
+                        let bgColor = 'rgba(255, 255, 255, 0.1)';
+                        let borderColor = 'rgba(255, 255, 255, 0.2)';
+                        let color = '#CBD5E1';
+
+                        if (isOccupied) {
+                          bgColor = 'rgba(100, 116, 139, 0.3)';
+                          borderColor = 'rgba(100, 116, 139, 0.4)';
+                          color = '#64748B';
+                        } else if (isSelected) {
+                          bgColor = '#E50914';
+                          borderColor = '#FF2E4D';
+                          color = '#FFF';
+                        }
+
+                        return (
+                          <Box
+                            key={seatId}
+                            onClick={() => handleToggleSeat(seatId)}
+                            sx={{
+                              width: 26,
+                              height: 26,
+                              borderRadius: '4px',
+                              backgroundColor: bgColor,
+                              border: `1px solid ${borderColor}`,
+                              color,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '0.65rem',
+                              fontWeight: 700,
+                              cursor: isOccupied ? 'not-allowed' : 'pointer',
+                              transition: 'all 0.2s ease',
+                            }}
+                          >
+                            {col}
+                          </Box>
+                        );
+                      })}
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+
+            {/* Form Error Alert */}
+            {formError && (
+              <Alert severity="error" icon={false} sx={{ mb: 2, borderRadius: '6px' }}>
+                {formError}
+              </Alert>
+            )}
+
+            {/* Price Breakdown */}
             <Box
               sx={{
-                backgroundColor: 'rgba(9, 12, 21, 0.7)',
                 p: 2,
                 borderRadius: '8px',
+                backgroundColor: 'rgba(9, 12, 21, 0.7)',
                 border: '1px solid rgba(255, 255, 255, 0.08)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 1,
-                alignItems: 'center',
+                mb: 2.5,
               }}
             >
-              {SEAT_ROWS.map((row) => (
-                <Box key={row} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography variant="caption" sx={{ fontWeight: 700, width: 14, color: '#94A3B8' }}>
-                    {row}
-                  </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.8 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Tanggal & Jam:
+                </Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: '#FFF' }}>
+                  {dateOptions[selectedDateIndex].label} - {selectedTime}
+                </Typography>
+              </Box>
 
-                  <Box sx={{ display: 'flex', gap: 0.8 }}>
-                    {Array.from({ length: SEATS_PER_ROW }, (_, i) => i + 1).map((col) => {
-                      const seatId = `${row}${col}`;
-                      const isOccupied = OCCUPIED_SEATS.includes(seatId);
-                      const isSelected = selectedSeats.includes(seatId);
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.8 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Kursi Dipilih:
+                </Typography>
+                <Typography variant="body2" sx={{ fontWeight: 700, color: '#FFD700' }}>
+                  {selectedSeats.length > 0 ? selectedSeats.sort().join(', ') : '-'}
+                </Typography>
+              </Box>
 
-                      let bgColor = 'rgba(255, 255, 255, 0.1)';
-                      let borderColor = 'rgba(255, 255, 255, 0.2)';
-                      let color = '#CBD5E1';
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.8 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Total Jumlah Tiket:
+                </Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  {quantity} Tiket
+                </Typography>
+              </Box>
 
-                      if (isOccupied) {
-                        bgColor = 'rgba(100, 116, 139, 0.3)';
-                        borderColor = 'rgba(100, 116, 139, 0.4)';
-                        color = '#64748B';
-                      } else if (isSelected) {
-                        bgColor = '#E50914';
-                        borderColor = '#FF2E4D';
-                        color = '#FFF';
-                      }
+              <Divider sx={{ my: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
 
-                      return (
-                        <Box
-                          key={seatId}
-                          onClick={() => handleToggleSeat(seatId)}
-                          sx={{
-                            width: 26,
-                            height: 26,
-                            borderRadius: '4px',
-                            backgroundColor: bgColor,
-                            border: `1px solid ${borderColor}`,
-                            color,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '0.65rem',
-                            fontWeight: 700,
-                            cursor: isOccupied ? 'not-allowed' : 'pointer',
-                            transition: 'all 0.2s ease',
-                          }}
-                        >
-                          {col}
-                        </Box>
-                      );
-                    })}
-                  </Box>
-                </Box>
-              ))}
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#FFF' }}>
+                  Total Bayar:
+                </Typography>
+                <Typography variant="h5" sx={{ fontWeight: 800, color: '#FFD700' }}>
+                  Rp {totalPrice.toLocaleString('id-ID')}
+                </Typography>
+              </Box>
             </Box>
+
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              variant="contained"
+              size="large"
+              fullWidth
+              disabled={quantity === 0}
+              startIcon={!user ? <PersonIcon /> : undefined}
+              sx={{
+                py: 1.4,
+                fontSize: '1rem',
+                fontWeight: 800,
+                borderRadius: '6px',
+              }}
+            >
+              {!user
+                ? 'Masuk / Daftar untuk Pesan Tiket'
+                : quantity > 0
+                ? `Pesan Tiket (${selectedSeats.join(', ')})`
+                : 'Pilih Kursi Terlebih Dahulu'}
+            </Button>
           </Box>
+        </CardContent>
 
-          {/* Form Error Alert */}
-          {formError && (
-            <Alert severity="error" icon={false} sx={{ mb: 2, borderRadius: '6px' }}>
-              {formError}
-            </Alert>
-          )}
-
-          {/* Price Breakdown */}
-          <Box
+        {/* Success Notification Snackbar */}
+        <Snackbar
+          open={showSuccessToast}
+          autoHideDuration={4000}
+          onClose={() => setShowSuccessToast(false)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert
+            onClose={() => setShowSuccessToast(false)}
+            severity="success"
+            variant="filled"
+            icon={<CheckCircleIcon fontSize="inherit" />}
             sx={{
-              p: 2,
-              borderRadius: '8px',
-              backgroundColor: 'rgba(9, 12, 21, 0.7)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              mb: 2.5,
-            }}
-          >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.8 }}>
-              <Typography variant="body2" color="text.secondary">
-                Tanggal & Jam:
-              </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 600, color: '#FFF' }}>
-                {dateOptions[selectedDateIndex].label} - {selectedTime}
-              </Typography>
-            </Box>
-
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.8 }}>
-              <Typography variant="body2" color="text.secondary">
-                Kursi Dipilih:
-              </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 700, color: '#FFD700' }}>
-                {selectedSeats.length > 0 ? selectedSeats.sort().join(', ') : '-'}
-              </Typography>
-            </Box>
-
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.8 }}>
-              <Typography variant="body2" color="text.secondary">
-                Total Jumlah Tiket:
-              </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                {quantity} Tiket
-              </Typography>
-            </Box>
-
-            <Divider sx={{ my: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#FFF' }}>
-                Total Bayar:
-              </Typography>
-              <Typography variant="h5" sx={{ fontWeight: 800, color: '#FFD700' }}>
-                Rp {totalPrice.toLocaleString('id-ID')}
-              </Typography>
-            </Box>
-          </Box>
-
-          {/* Submit Button */}
-          <Button
-            type="submit"
-            variant="contained"
-            size="large"
-            fullWidth
-            disabled={quantity === 0}
-            sx={{
-              py: 1.4,
-              fontSize: '1rem',
-              fontWeight: 800,
+              width: '100%',
+              backgroundColor: '#10B981',
+              color: '#FFF',
+              fontWeight: 700,
               borderRadius: '6px',
             }}
+            action={
+              <Button
+                color="inherit"
+                size="small"
+                onClick={() => navigate('/my-tickets')}
+                sx={{ fontWeight: 800, textDecoration: 'underline' }}
+              >
+                Lihat Tiket
+              </Button>
+            }
           >
-            {quantity > 0 ? `Pesan Tiket (${selectedSeats.join(', ')})` : 'Pilih Kursi Terlebih Dahulu'}
-          </Button>
-        </Box>
-      </CardContent>
+            Tiket film "{show.name}" berhasil dipesan!
+          </Alert>
+        </Snackbar>
+      </Card>
 
-      {/* Success Notification Snackbar */}
-      <Snackbar
-        open={showSuccessToast}
-        autoHideDuration={4000}
-        onClose={() => setShowSuccessToast(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert
-          onClose={() => setShowSuccessToast(false)}
-          severity="success"
-          variant="filled"
-          icon={<CheckCircleIcon fontSize="inherit" />}
-          sx={{
-            width: '100%',
-            backgroundColor: '#10B981',
-            color: '#FFF',
-            fontWeight: 700,
-            borderRadius: '6px',
-          }}
-          action={
-            <Button
-              color="inherit"
-              size="small"
-              onClick={() => navigate('/my-tickets')}
-              sx={{ fontWeight: 800, textDecoration: 'underline' }}
-            >
-              Lihat Tiket
-            </Button>
-          }
-        >
-          Tiket film "{show.name}" berhasil dipesan!
-        </Alert>
-      </Snackbar>
-    </Card>
+      {/* Auth Modal Trigger */}
+      <AuthModal
+        open={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        onSuccess={processTicketBooking}
+      />
+    </>
   );
 };
