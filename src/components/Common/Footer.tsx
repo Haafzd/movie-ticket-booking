@@ -9,8 +9,9 @@ export const Footer: React.FC = () => {
         mt: 'auto',
         py: 3.5,
         px: 2,
-        backgroundColor: '#06080F',
-        borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+        backgroundColor: 'background.paper',
+        borderTop: '1px solid',
+        borderColor: 'divider',
         textAlign: 'center',
       }}
     >
@@ -21,14 +22,10 @@ export const Footer: React.FC = () => {
             flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
-            gap: 0.8,
           }}
         >
           <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
             © 2026 CineVerse - Movie Ticket Booking Experience. Data provided by TVMaze API.
-          </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ opacity: 0.7 }}>
-            Project PRD v1.0 | Telkom University
           </Typography>
         </Box>
       </Container>
