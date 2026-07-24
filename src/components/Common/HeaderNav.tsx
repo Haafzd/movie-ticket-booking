@@ -23,7 +23,7 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { logoutUser } from '../../store/slices/authSlice';
-import { useThemeMode } from '../../context/ThemeModeContext';
+import { useThemeMode } from '../../hooks/useThemeMode';
 import { AuthModal } from '../Auth/AuthModal';
 
 export const HeaderNav: React.FC = () => {
