@@ -36,6 +36,7 @@ export const GenreFilter: React.FC<GenreFilterProps> = ({
               px: 1,
               py: 0.5,
               fontWeight: isSelected ? 700 : 500,
+              borderRadius: '6px',
               backgroundColor: isSelected ? '#E50914' : 'rgba(18, 23, 38, 0.6)',
               borderColor: isSelected ? '#E50914' : 'rgba(255, 255, 255, 0.12)',
               '&:hover': {

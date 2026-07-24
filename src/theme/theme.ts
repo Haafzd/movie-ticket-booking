@@ -74,7 +74,7 @@ export const theme = createTheme({
     },
   },
   shape: {
-    borderRadius: 12,
+    borderRadius: 8,
   },
   components: {
     MuiCssBaseline: {
@@ -104,7 +104,7 @@ export const theme = createTheme({
         root: {
           backgroundColor: '#121726',
           backgroundImage: 'none',
-          borderRadius: 16,
+          borderRadius: 8,
           border: '1px solid rgba(255, 255, 255, 0.08)',
           boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -114,8 +114,8 @@ export const theme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 10,
-          padding: '10px 22px',
+          borderRadius: 6,
+          padding: '8px 20px',
           fontSize: '0.95rem',
           boxShadow: 'none',
           transition: 'all 0.25s ease-in-out',
@@ -125,12 +125,19 @@ export const theme = createTheme({
     MuiChip: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: 6,
           fontWeight: 600,
         },
         filled: {
           backgroundColor: 'rgba(255, 255, 255, 0.07)',
           border: '1px solid rgba(255, 255, 255, 0.12)',
+        },
+      },
+    },
+    MuiAlert: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
         },
       },
     },

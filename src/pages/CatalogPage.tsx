@@ -1,7 +1,5 @@
 import React, { useEffect } from 'react';
 import { Container, Typography, Box, Grid, Alert, Button } from '@mui/material';
-import MovieIcon from '@mui/icons-material/Movie';
-import LocalActivityIcon from '@mui/icons-material/LocalActivity';
 import { useAppDispatch, useAppSelector } from '../store';
 import { fetchShows, setSearchQuery, setSelectedGenre } from '../store/slices/filmSlice';
 import { useDebounce } from '../hooks/useDebounce';
@@ -19,8 +17,13 @@ const CatalogPage: React.FC = () => {
   const debouncedQuery = useDebounce(searchQuery, 500);
 
   useEffect(() => {
-    dispatch(fetchShows(debouncedQuery));
-  }, [dispatch, debouncedQuery]);
+    // If search bar is empty but a specific genre chip is selected, fetch shows matching that genre!
+    if (!debouncedQuery && selectedGenre !== 'All') {
+      dispatch(fetchShows(selectedGenre));
+    } else {
+      dispatch(fetchShows(debouncedQuery));
+    }
+  }, [dispatch, debouncedQuery, selectedGenre]);
 
   const handleSearchChange = (query: string) => {
     dispatch(setSearchQuery(query));
@@ -30,10 +33,10 @@ const CatalogPage: React.FC = () => {
     dispatch(setSelectedGenre(genre));
   };
 
-  // Filter shows based on selected genre chip
+  // Filter client-side by genre if search query is also active
   const filteredShows = shows.filter((show) => {
     if (selectedGenre === 'All') return true;
-    return show.genres.some((g) => g.toLowerCase() === selectedGenre.toLowerCase());
+    return show.genres.some((g) => g.toLowerCase().includes(selectedGenre.toLowerCase()));
   });
 
   return (
@@ -43,51 +46,32 @@ const CatalogPage: React.FC = () => {
         sx={{
           textAlign: 'center',
           pt: { xs: 2, md: 4 },
-          pb: { xs: 4, md: 5 },
-          mb: 4,
-          borderRadius: 6,
-          background: 'radial-gradient(ellipse at top, rgba(229, 9, 20, 0.15) 0%, rgba(9, 12, 21, 0) 70%)',
+          pb: { xs: 3, md: 4 },
+          mb: 3,
+          borderRadius: '8px',
+          background: 'radial-gradient(ellipse at top, rgba(229, 9, 20, 0.12) 0%, rgba(9, 12, 21, 0) 70%)',
         }}
       >
-        <Box
-          sx={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 1,
-            px: 2,
-            py: 0.5,
-            borderRadius: 8,
-            backgroundColor: 'rgba(229, 9, 20, 0.12)',
-            border: '1px solid rgba(229, 9, 20, 0.3)',
-            mb: 2,
-          }}
-        >
-          <LocalActivityIcon sx={{ color: '#E50914', fontSize: 18 }} />
-          <Typography variant="caption" sx={{ color: '#FF2E4D', fontWeight: 700, letterSpacing: '1px' }}>
-            PEMESANAN TIKET BIOSKOP ONLINE
-          </Typography>
-        </Box>
-
         <Typography
           variant="h2"
           sx={{
-            fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4.2rem' },
+            fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4rem' },
             lineHeight: 1.1,
-            mb: 2,
+            mb: 1.5,
             background: 'linear-gradient(180deg, #FFFFFF 30%, #94A3B8 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
           }}
         >
-          Cari & Pesan Tiket Film Favoritmu
+          Katalog & Pemesanan Tiket Film
         </Typography>
 
         <Typography
           variant="body1"
           color="text.secondary"
-          sx={{ maxWidth: 650, mx: 'auto', fontSize: '1.05rem', mb: 4 }}
+          sx={{ maxWidth: 650, mx: 'auto', fontSize: '1rem', mb: 3 }}
         >
-          Jelajahi katalog acara TV dan film terkini. Pilih jadwal tayang favoritmu dan dapatkan tiket fisik digital secara langsung.
+          Cari judul film bioskop, tentukan tanggal & jam tayang, serta pilih posisi kursi studio bioskop favoritmu.
         </Typography>
 
         {/* Search Bar Component */}
@@ -105,34 +89,38 @@ const CatalogPage: React.FC = () => {
       {loading ? (
         <LoadingSkeleton count={8} />
       ) : error ? (
-        <ErrorAlert message={error} onRetry={() => dispatch(fetchShows(debouncedQuery))} />
+        <ErrorAlert message={error} onRetry={() => dispatch(fetchShows(debouncedQuery || selectedGenre))} />
       ) : filteredShows.length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 8 }}>
+        <Box sx={{ textAlign: 'center', py: 6 }}>
           <Alert
             severity="warning"
-            variant="outlined"
+            icon={false}
             sx={{
-              maxWidth: 550,
+              maxWidth: 500,
               mx: 'auto',
-              borderRadius: 3,
-              backgroundColor: 'rgba(245, 158, 11, 0.05)',
+              borderRadius: '8px',
+              p: 2.5,
+              backgroundColor: 'rgba(245, 158, 11, 0.08)',
               borderColor: 'rgba(245, 158, 11, 0.3)',
+              borderStyle: 'solid',
+              borderWidth: '1px',
+              textAlign: 'center',
             }}
           >
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, color: '#FFF' }}>
               Film Tidak Ditemukan
             </Typography>
             Tidak ada film yang cocok dengan kata kunci "{searchQuery}"
-            {selectedGenre !== 'All' ? ` atau genre "${selectedGenre}"` : ''}. Silakan coba pencarian lain.
+            {selectedGenre !== 'All' ? ` atau genre "${selectedGenre}"` : ''}. Silakan coba kata kunci lain.
           </Alert>
+
           <Button
             variant="outlined"
-            startIcon={<MovieIcon />}
             onClick={() => {
               dispatch(setSearchQuery(''));
               dispatch(setSelectedGenre('All'));
             }}
-            sx={{ mt: 3 }}
+            sx={{ mt: 3, borderRadius: '6px' }}
           >
             Tampilkan Semua Film
           </Button>

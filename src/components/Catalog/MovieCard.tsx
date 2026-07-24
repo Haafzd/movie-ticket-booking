@@ -1,7 +1,6 @@
 import React from 'react';
-import { Card, CardMedia, CardContent, Typography, Box, Chip, Rating } from '@mui/material';
+import { Card, CardMedia, CardContent, Typography, Box, Chip } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
-import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import { Link as RouterLink } from 'react-router-dom';
 import type { Show } from '../../types';
 
@@ -11,7 +10,6 @@ interface MovieCardProps {
 
 export const MovieCard: React.FC<MovieCardProps> = ({ show }) => {
   const posterUrl = show.image?.medium || show.image?.original || 'https://via.placeholder.com/300x420/121726/FFFFFF?text=No+Poster';
-  const ratingValue = show.rating?.average ? show.rating.average / 2 : null;
 
   return (
     <Card
@@ -25,12 +23,13 @@ export const MovieCard: React.FC<MovieCardProps> = ({ show }) => {
         position: 'relative',
         overflow: 'hidden',
         cursor: 'pointer',
+        borderRadius: '8px',
         '&:hover': {
-          transform: 'translateY(-8px)',
-          borderColor: 'rgba(229, 9, 20, 0.6)',
-          boxShadow: '0 16px 40px rgba(229, 9, 20, 0.25)',
+          transform: 'translateY(-4px)',
+          borderColor: '#E50914',
+          boxShadow: '0 12px 28px rgba(229, 9, 20, 0.2)',
           '& .movie-poster': {
-            transform: 'scale(1.05)',
+            transform: 'scale(1.04)',
           },
           '& .booking-overlay': {
             opacity: 1,
@@ -52,7 +51,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ show }) => {
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+            transition: 'transform 0.3s ease',
           }}
         />
 
@@ -61,20 +60,19 @@ export const MovieCard: React.FC<MovieCardProps> = ({ show }) => {
           <Box
             sx={{
               position: 'absolute',
-              top: 12,
-              right: 12,
+              top: 10,
+              right: 10,
               background: 'rgba(9, 12, 21, 0.85)',
-              backdropFilter: 'blur(8px)',
-              px: 1.2,
-              py: 0.4,
-              borderRadius: 2,
+              px: 1,
+              py: 0.3,
+              borderRadius: '6px',
               display: 'flex',
               alignItems: 'center',
               gap: 0.5,
               border: '1px solid rgba(255, 215, 0, 0.4)',
             }}
           >
-            <StarIcon sx={{ color: '#FFD700', fontSize: 16 }} />
+            <StarIcon sx={{ color: '#FFD700', fontSize: 14 }} />
             <Typography variant="caption" sx={{ fontWeight: 700, color: '#FFF' }}>
               {show.rating.average.toFixed(1)}
             </Typography>
@@ -87,32 +85,27 @@ export const MovieCard: React.FC<MovieCardProps> = ({ show }) => {
           sx={{
             position: 'absolute',
             inset: 0,
-            background: 'linear-gradient(to top, rgba(9, 12, 21, 0.95) 0%, rgba(9, 12, 21, 0.4) 60%, transparent 100%)',
+            background: 'linear-gradient(to top, rgba(9, 12, 21, 0.9) 0%, transparent 80%)',
             display: 'flex',
             alignItems: 'flex-end',
             justifyContent: 'center',
-            pb: 3,
+            pb: 2,
             px: 2,
             opacity: 0,
-            transition: 'opacity 0.3s ease',
+            transition: 'opacity 0.25s ease',
           }}
         >
           <Box
             sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
               backgroundColor: '#E50914',
               color: '#FFF',
-              py: 1,
-              px: 2.5,
-              borderRadius: 2,
+              py: 0.8,
+              px: 2,
+              borderRadius: '6px',
               fontWeight: 700,
-              fontSize: '0.875rem',
-              boxShadow: '0 4px 14px rgba(229, 9, 20, 0.5)',
+              fontSize: '0.85rem',
             }}
           >
-            <ConfirmationNumberIcon sx={{ fontSize: 18 }} />
             Pesan Tiket
           </Box>
         </Box>
@@ -124,9 +117,9 @@ export const MovieCard: React.FC<MovieCardProps> = ({ show }) => {
           variant="h6"
           sx={{
             fontWeight: 700,
-            fontSize: '1.05rem',
+            fontSize: '1rem',
             lineHeight: 1.3,
-            mb: 1,
+            mb: 1.5,
             color: '#F8FAFC',
             display: '-webkit-box',
             WebkitLineClamp: 2,
@@ -137,12 +130,6 @@ export const MovieCard: React.FC<MovieCardProps> = ({ show }) => {
           {show.name}
         </Typography>
 
-        {ratingValue && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-            <Rating value={ratingValue} precision={0.5} readOnly size="small" sx={{ color: '#FFD700' }} />
-          </Box>
-        )}
-
         {/* Genre Chips */}
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 'auto' }}>
           {show.genres.slice(0, 2).map((genre) => (
@@ -151,8 +138,9 @@ export const MovieCard: React.FC<MovieCardProps> = ({ show }) => {
               label={genre}
               size="small"
               sx={{
-                fontSize: '0.7rem',
+                fontSize: '0.68rem',
                 height: 22,
+                borderRadius: '4px',
                 backgroundColor: 'rgba(255, 255, 255, 0.06)',
                 color: '#94A3B8',
                 border: '1px solid rgba(255, 255, 255, 0.08)',

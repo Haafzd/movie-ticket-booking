@@ -43,7 +43,9 @@ export interface TicketBooking {
   showId: number;
   showTitle: string;
   posterUrl: string | null;
-  schedule: string; // e.g. "14:30 WIB", "17:00 WIB", "19:30 WIB", "21:15 WIB"
+  schedule: string; // e.g. "Jumat, 24 Jul 2026 - 20:00 WIB"
+  bookingDateOnly?: string; // Date portion
+  bookingTimeOnly?: string; // Time portion
   quantity: number;
   seats?: string[]; // e.g. ["A3", "A4"]
   pricePerTicket: number; // Rp 50.000

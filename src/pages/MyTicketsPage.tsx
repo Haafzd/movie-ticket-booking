@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { Container, Typography, Box, Button, Alert, Snackbar } from '@mui/material';
-import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
-import MovieIcon from '@mui/icons-material/Movie';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { Link as RouterLink } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store';
@@ -31,25 +29,6 @@ const MyTicketsPage: React.FC = () => {
     <Container maxWidth="lg" className="fade-in">
       {/* Header */}
       <Box sx={{ mb: 4, textAlign: 'center' }}>
-        <Box
-          sx={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 1.5,
-            px: 2.5,
-            py: 0.8,
-            borderRadius: 8,
-            backgroundColor: 'rgba(229, 9, 20, 0.12)',
-            border: '1px solid rgba(229, 9, 20, 0.3)',
-            mb: 2,
-          }}
-        >
-          <ConfirmationNumberIcon sx={{ color: '#E50914', fontSize: 22 }} />
-          <Typography variant="subtitle1" sx={{ color: '#FFF', fontWeight: 800 }}>
-            DOMPET TIKET SAYA
-          </Typography>
-        </Box>
-
         <Typography
           variant="h2"
           sx={{
@@ -69,17 +48,20 @@ const MyTicketsPage: React.FC = () => {
 
       {/* Main Content */}
       {bookings.length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 8 }}>
+        <Box sx={{ textAlign: 'center', py: 6 }}>
           <Alert
             severity="info"
-            variant="outlined"
+            icon={false}
             sx={{
-              maxWidth: 550,
+              maxWidth: 500,
               mx: 'auto',
-              borderRadius: 4,
-              p: 3,
-              backgroundColor: 'rgba(59, 130, 246, 0.05)',
+              borderRadius: '8px',
+              p: 2.5,
+              backgroundColor: 'rgba(59, 130, 246, 0.08)',
               borderColor: 'rgba(59, 130, 246, 0.3)',
+              borderStyle: 'solid',
+              borderWidth: '1px',
+              textAlign: 'center',
             }}
           >
             <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, color: '#FFF' }}>
@@ -93,8 +75,7 @@ const MyTicketsPage: React.FC = () => {
             to="/"
             variant="contained"
             size="large"
-            startIcon={<MovieIcon />}
-            sx={{ mt: 4, py: 1.5, px: 4, fontWeight: 700 }}
+            sx={{ mt: 3, py: 1.2, px: 3, fontWeight: 700, borderRadius: '6px' }}
           >
             Cari & Pesan Tiket Now
           </Button>
@@ -136,7 +117,7 @@ const MyTicketsPage: React.FC = () => {
             backgroundColor: '#3B82F6',
             color: '#FFF',
             fontWeight: 700,
-            borderRadius: 3,
+            borderRadius: '6px',
           }}
         >
           Pemesanan tiket berhasil dibatalkan.

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -11,12 +11,7 @@ import {
   Chip,
   Tooltip,
 } from '@mui/material';
-import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import EventSeatIcon from '@mui/icons-material/EventSeat';
-import TvIcon from '@mui/icons-material/Tv';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '../../store';
 import { bookTicket } from '../../store/slices/bookingSlice';
@@ -26,7 +21,15 @@ interface BookingFormProps {
   show: Show;
 }
 
-const SCHEDULE_OPTIONS = ['12:30 WIB', '15:00 WIB', '17:30 WIB', '20:00 WIB', '22:15 WIB'];
+const BASE_TIMES = [
+  { label: '10:00 WIB', hour: 10, minute: 0 },
+  { label: '12:30 WIB', hour: 12, minute: 30 },
+  { label: '15:00 WIB', hour: 15, minute: 0 },
+  { label: '17:30 WIB', hour: 17, minute: 30 },
+  { label: '20:00 WIB', hour: 20, minute: 0 },
+  { label: '22:15 WIB', hour: 22, minute: 15 },
+];
+
 const PRICE_PER_TICKET = 50000;
 
 // Cinema Seat Grid Setup (5 Rows x 8 Columns)
@@ -38,7 +41,59 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const [schedule, setSchedule] = useState<string>(SCHEDULE_OPTIONS[2]); // Default 17:30 WIB
+  // Generate Date Options for Today and Next 3 Days
+  const dateOptions = useMemo(() => {
+    const days = [];
+    const now = new Date();
+    for (let i = 0; i < 4; i++) {
+      const date = new Date(now);
+      date.setDate(now.getDate() + i);
+
+      const dayName = i === 0 ? 'Hari Ini' : date.toLocaleDateString('id-ID', { weekday: 'short' });
+      const dateFormatted = date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+      const fullDateStr = date.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
+
+      days.push({
+        index: i,
+        label: `${dayName} (${dateFormatted})`,
+        fullDateStr,
+        isToday: i === 0,
+      });
+    }
+    return days;
+  }, []);
+
+  const [selectedDateIndex, setSelectedDateIndex] = useState<number>(0);
+  
+  // Real-time time slot availability calculation
+  const timeSlots = useMemo(() => {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    const selectedDateObj = dateOptions[selectedDateIndex];
+
+    return BASE_TIMES.map((slot) => {
+      let isExpired = false;
+      if (selectedDateObj.isToday) {
+        if (slot.hour < currentHour || (slot.hour === currentHour && slot.minute <= currentMinute)) {
+          isExpired = true;
+        }
+      }
+      return {
+        ...slot,
+        isExpired,
+      };
+    });
+  }, [dateOptions, selectedDateIndex]);
+
+  // Default time slot selection: first available non-expired time slot
+  const firstAvailableTime = useMemo(() => {
+    const available = timeSlots.find((t) => !t.isExpired);
+    return available ? available.label : BASE_TIMES[BASE_TIMES.length - 1].label;
+  }, [timeSlots]);
+
+  const [selectedTime, setSelectedTime] = useState<string>(firstAvailableTime);
   const [selectedSeats, setSelectedSeats] = useState<string[]>(['C4']); // Default seat C4 selected
   const [showSuccessToast, setShowSuccessToast] = useState<boolean>(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -47,7 +102,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
   const totalPrice = quantity * PRICE_PER_TICKET;
 
   const handleToggleSeat = (seatId: string) => {
-    if (OCCUPIED_SEATS.includes(seatId)) return; // Locked
+    if (OCCUPIED_SEATS.includes(seatId)) return;
 
     setFormError(null);
     if (selectedSeats.includes(seatId)) {
@@ -69,12 +124,16 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
       return;
     }
 
+    const fullScheduleStr = `${dateOptions[selectedDateIndex].fullDateStr} - ${selectedTime}`;
+
     dispatch(
       bookTicket({
         showId: show.id,
         showTitle: show.name,
         posterUrl: show.image?.medium || show.image?.original || null,
-        schedule,
+        schedule: fullScheduleStr,
+        bookingDateOnly: dateOptions[selectedDateIndex].fullDateStr,
+        bookingTimeOnly: selectedTime,
         quantity,
         seats: selectedSeats.sort(),
         pricePerTicket: PRICE_PER_TICKET,
@@ -90,52 +149,49 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
       sx={{
         backgroundColor: '#121726',
         border: '1px solid rgba(229, 9, 20, 0.4)',
-        boxShadow: '0 12px 36px rgba(0, 0, 0, 0.5)',
-        borderRadius: 5,
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+        borderRadius: '8px',
         p: 1,
       }}
     >
       <CardContent>
         {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-          <ConfirmationNumberIcon sx={{ color: '#E50914', fontSize: 28 }} />
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#FFF' }}>
-            Pilih Jadwal & Kursi Bioskop
-          </Typography>
-        </Box>
-
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Pilih jam tayang dan posisi kursi di studio bioskop untuk pengalaman menonton terbaik.
+        <Typography variant="h5" sx={{ fontWeight: 700, color: '#FFF', mb: 1 }}>
+          Pemesanan Tiket Bioskop
         </Typography>
 
-        <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.08)', mb: 3 }} />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
+          Pilih tanggal, jadwal jam tayang, dan posisi kursi studio yang Anda inginkan.
+        </Typography>
+
+        <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.08)', mb: 2.5 }} />
 
         <Box component="form" onSubmit={handleBookingSubmit}>
-          {/* Schedule Select */}
+          {/* 1. Date Selection */}
           <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.2, color: '#E2E8F0' }}>
-              1. Pilih Jadwal Tayang:
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: '#E2E8F0' }}>
+              1. Pilih Tanggal Nonton:
             </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {SCHEDULE_OPTIONS.map((time) => {
-                const isSelected = schedule === time;
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8 }}>
+              {dateOptions.map((option) => {
+                const isSelected = selectedDateIndex === option.index;
                 return (
                   <Chip
-                    key={time}
-                    icon={<AccessTimeIcon sx={{ fontSize: 16 }} />}
-                    label={time}
-                    onClick={() => setSchedule(time)}
+                    key={option.index}
+                    label={option.label}
+                    onClick={() => {
+                      setSelectedDateIndex(option.index);
+                      setFormError(null);
+                    }}
                     color={isSelected ? 'primary' : 'default'}
                     variant={isSelected ? 'filled' : 'outlined'}
                     sx={{
                       fontWeight: 700,
-                      py: 2.2,
+                      py: 2,
                       px: 0.5,
+                      borderRadius: '6px',
                       backgroundColor: isSelected ? '#E50914' : 'rgba(255, 255, 255, 0.05)',
                       borderColor: isSelected ? '#E50914' : 'rgba(255, 255, 255, 0.15)',
-                      '&:hover': {
-                        backgroundColor: isSelected ? '#FF2E4D' : 'rgba(229, 9, 20, 0.2)',
-                      },
                     }}
                   />
                 );
@@ -143,52 +199,87 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
             </Box>
           </Box>
 
-          {/* Interactive Seat Picker Section */}
+          {/* 2. Time Slot Selection (Filtered by DateTimeNow) */}
           <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.2, color: '#E2E8F0' }}>
-              2. Pilih Kursi Studio Bioskop:
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: '#E2E8F0' }}>
+              2. Pilih Jam Tayang:
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8 }}>
+              {timeSlots.map((slot) => {
+                const isSelected = selectedTime === slot.label && !slot.isExpired;
+                return (
+                  <Tooltip
+                    key={slot.label}
+                    title={slot.isExpired ? 'Jadwal tayang sudah lewat' : 'Jadwal tersedia'}
+                  >
+                    <span>
+                      <Chip
+                        label={slot.isExpired ? `${slot.label} (Lewat)` : slot.label}
+                        disabled={slot.isExpired}
+                        onClick={() => {
+                          if (!slot.isExpired) {
+                            setSelectedTime(slot.label);
+                            setFormError(null);
+                          }
+                        }}
+                        color={isSelected ? 'primary' : 'default'}
+                        variant={isSelected ? 'filled' : 'outlined'}
+                        sx={{
+                          fontWeight: 700,
+                          py: 2,
+                          px: 0.5,
+                          borderRadius: '6px',
+                          backgroundColor: isSelected ? '#E50914' : 'rgba(255, 255, 255, 0.05)',
+                          borderColor: isSelected ? '#E50914' : 'rgba(255, 255, 255, 0.15)',
+                          opacity: slot.isExpired ? 0.4 : 1,
+                        }}
+                      />
+                    </span>
+                  </Tooltip>
+                );
+              })}
+            </Box>
+          </Box>
+
+          {/* 3. Interactive Seat Map Grid */}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: '#E2E8F0' }}>
+              3. Pilih Kursi Studio:
             </Typography>
 
             {/* Screen Banner */}
             <Box
               sx={{
                 width: '100%',
-                py: 0.8,
-                mb: 2.5,
-                borderRadius: 2,
+                py: 0.6,
+                mb: 2,
+                borderRadius: '4px',
                 background: 'linear-gradient(180deg, rgba(229, 9, 20, 0.4) 0%, rgba(9, 12, 21, 0.2) 100%)',
                 borderTop: '2px solid #E50914',
                 textAlign: 'center',
-                boxShadow: '0 -4px 12px rgba(229, 9, 20, 0.3)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 1,
               }}
             >
-              <TvIcon sx={{ color: '#E50914', fontSize: 18 }} />
               <Typography variant="caption" sx={{ fontWeight: 800, color: '#F8FAFC', letterSpacing: '2px' }}>
                 LAYAR BIOSKOP (SCREEN)
               </Typography>
             </Box>
 
-            {/* Seat Map Grid */}
+            {/* Seat Map */}
             <Box
               sx={{
                 backgroundColor: 'rgba(9, 12, 21, 0.7)',
                 p: 2,
-                borderRadius: 3,
+                borderRadius: '8px',
                 border: '1px solid rgba(255, 255, 255, 0.08)',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 1.2,
+                gap: 1,
                 alignItems: 'center',
-                overflowX: 'auto',
               }}
             >
               {SEAT_ROWS.map((row) => (
                 <Box key={row} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography variant="caption" sx={{ fontWeight: 700, width: 16, color: '#94A3B8' }}>
+                  <Typography variant="caption" sx={{ fontWeight: 700, width: 14, color: '#94A3B8' }}>
                     {row}
                   </Typography>
 
@@ -213,96 +304,38 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
                       }
 
                       return (
-                        <Tooltip
+                        <Box
                           key={seatId}
-                          title={isOccupied ? `Kursi ${seatId} (Terisi)` : `Kursi ${seatId}`}
-                          arrow
+                          onClick={() => handleToggleSeat(seatId)}
+                          sx={{
+                            width: 26,
+                            height: 26,
+                            borderRadius: '4px',
+                            backgroundColor: bgColor,
+                            border: `1px solid ${borderColor}`,
+                            color,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '0.65rem',
+                            fontWeight: 700,
+                            cursor: isOccupied ? 'not-allowed' : 'pointer',
+                            transition: 'all 0.2s ease',
+                          }}
                         >
-                          <Box
-                            onClick={() => handleToggleSeat(seatId)}
-                            sx={{
-                              width: 28,
-                              height: 28,
-                              borderRadius: '6px 6px 4px 4px',
-                              backgroundColor: bgColor,
-                              border: `1px solid ${borderColor}`,
-                              color,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: '0.68rem',
-                              fontWeight: 700,
-                              cursor: isOccupied ? 'not-allowed' : 'pointer',
-                              transition: 'all 0.2s ease',
-                              boxShadow: isSelected ? '0 0 10px rgba(229, 9, 20, 0.8)' : 'none',
-                              '&:hover': {
-                                transform: isOccupied ? 'none' : 'scale(1.15)',
-                                backgroundColor: isOccupied
-                                  ? bgColor
-                                  : isSelected
-                                  ? '#FF2E4D'
-                                  : 'rgba(229, 9, 20, 0.3)',
-                              },
-                            }}
-                          >
-                            {col}
-                          </Box>
-                        </Tooltip>
+                          {col}
+                        </Box>
                       );
                     })}
                   </Box>
                 </Box>
               ))}
-
-              {/* Legend Indicator */}
-              <Box sx={{ display: 'flex', gap: 2, mt: 1.5, flexWrap: 'wrap', justifyContent: 'center' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
-                  <Box
-                    sx={{
-                      width: 14,
-                      height: 14,
-                      borderRadius: 1,
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                    }}
-                  />
-                  <Typography variant="caption" color="text.secondary">
-                    Tersedia
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
-                  <Box
-                    sx={{
-                      width: 14,
-                      height: 14,
-                      borderRadius: 1,
-                      backgroundColor: '#E50914',
-                    }}
-                  />
-                  <Typography variant="caption" sx={{ color: '#FFF', fontWeight: 600 }}>
-                    Dipilih ({quantity})
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
-                  <Box
-                    sx={{
-                      width: 14,
-                      height: 14,
-                      borderRadius: 1,
-                      backgroundColor: 'rgba(100, 116, 139, 0.3)',
-                    }}
-                  />
-                  <Typography variant="caption" color="text.secondary">
-                    Terisi
-                  </Typography>
-                </Box>
-              </Box>
             </Box>
           </Box>
 
           {/* Form Error Alert */}
           {formError && (
-            <Alert severity="error" sx={{ mb: 2.5, borderRadius: 2 }}>
+            <Alert severity="error" icon={false} sx={{ mb: 2, borderRadius: '6px' }}>
               {formError}
             </Alert>
           )}
@@ -310,14 +343,23 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
           {/* Price Breakdown */}
           <Box
             sx={{
-              p: 2.5,
-              borderRadius: 3,
+              p: 2,
+              borderRadius: '8px',
               backgroundColor: 'rgba(9, 12, 21, 0.7)',
               border: '1px solid rgba(255, 255, 255, 0.08)',
-              mb: 3,
+              mb: 2.5,
             }}
           >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.8 }}>
+              <Typography variant="body2" color="text.secondary">
+                Tanggal & Jam:
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: 600, color: '#FFF' }}>
+                {dateOptions[selectedDateIndex].label} - {selectedTime}
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.8 }}>
               <Typography variant="body2" color="text.secondary">
                 Kursi Dipilih:
               </Typography>
@@ -326,16 +368,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
               </Typography>
             </Box>
 
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="body2" color="text.secondary">
-                Harga per Kursi:
-              </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                Rp {PRICE_PER_TICKET.toLocaleString('id-ID')}
-              </Typography>
-            </Box>
-
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.8 }}>
               <Typography variant="body2" color="text.secondary">
                 Total Jumlah Tiket:
               </Typography>
@@ -344,15 +377,12 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
               </Typography>
             </Box>
 
-            <Divider sx={{ my: 1.5, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+            <Divider sx={{ my: 1, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <LocalOfferIcon sx={{ color: '#FFD700', fontSize: 20 }} />
-                <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#FFF' }}>
-                  Total Pembayaran:
-                </Typography>
-              </Box>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#FFF' }}>
+                Total Bayar:
+              </Typography>
               <Typography variant="h5" sx={{ fontWeight: 800, color: '#FFD700' }}>
                 Rp {totalPrice.toLocaleString('id-ID')}
               </Typography>
@@ -365,16 +395,15 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
             variant="contained"
             size="large"
             fullWidth
-            startIcon={<EventSeatIcon />}
             disabled={quantity === 0}
             sx={{
-              py: 1.5,
-              fontSize: '1.1rem',
+              py: 1.4,
+              fontSize: '1rem',
               fontWeight: 800,
-              boxShadow: '0 8px 24px rgba(229, 9, 20, 0.4)',
+              borderRadius: '6px',
             }}
           >
-            {quantity > 0 ? `Pesan ${quantity} Kursi (${selectedSeats.join(', ')})` : 'Pilih Kursi Terlebih Dahulu'}
+            {quantity > 0 ? `Pesan Tiket (${selectedSeats.join(', ')})` : 'Pilih Kursi Terlebih Dahulu'}
           </Button>
         </Box>
       </CardContent>
@@ -396,8 +425,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
             backgroundColor: '#10B981',
             color: '#FFF',
             fontWeight: 700,
-            borderRadius: 3,
-            boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)',
+            borderRadius: '6px',
           }}
           action={
             <Button
@@ -410,7 +438,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
             </Button>
           }
         >
-          Tiket film "{show.name}" (Kursi: {selectedSeats.join(', ')}) berhasil dipesan!
+          Tiket film "{show.name}" berhasil dipesan!
         </Alert>
       </Snackbar>
     </Card>

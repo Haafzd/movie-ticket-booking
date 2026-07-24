@@ -30,9 +30,6 @@ export const Footer: React.FC = () => {
               © 2026 CineVerse - Movie Ticket Booking Experience. Data provided by TVMaze API.
             </Typography>
           </Box>
-          <Typography variant="caption" color="text.secondary">
-            Project PRD v1.0 | Telkom University
-          </Typography>
         </Box>
       </Container>
     </Box>
