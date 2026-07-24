@@ -1,7 +1,19 @@
-import React, { useState, useEffect, useMemo } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useState, useEffect, useMemo } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import { getCustomTheme } from '../theme/theme';
-import { ThemeModeContext, type PaletteMode } from './ThemeModeContext';
+
+export type PaletteMode = 'dark' | 'light';
+
+export interface ThemeModeContextType {
+  mode: PaletteMode;
+  toggleThemeMode: () => void;
+}
+
+export const ThemeModeContext = createContext<ThemeModeContextType>({
+  mode: 'dark',
+  toggleThemeMode: () => {},
+});
 
 const LOCAL_STORAGE_THEME_KEY = 'cineverse_theme_mode';
 

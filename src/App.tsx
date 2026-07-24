@@ -3,7 +3,7 @@ import { CssBaseline, Box } from '@mui/material';
 import { Provider } from 'react-redux';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { store } from './store';
-import { ThemeModeProvider } from './context/ThemeModeProvider';
+import { ThemeModeProvider } from './context/ThemeContext';
 import { HeaderNav } from './components/Common/HeaderNav';
 import { Footer } from './components/Common/Footer';
 
