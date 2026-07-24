@@ -1,18 +1,35 @@
 import React, { useState } from 'react';
-import { AppBar, Toolbar, Typography, Button, Badge, Container, Box, Avatar, Menu, MenuItem } from '@mui/material';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Badge,
+  Container,
+  Box,
+  Avatar,
+  Menu,
+  MenuItem,
+  IconButton,
+  Tooltip,
+} from '@mui/material';
 import MovieFilterIcon from '@mui/icons-material/MovieFilter';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import LocalMoviesIcon from '@mui/icons-material/LocalMovies';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import LightModeIcon from '@mui/icons-material/LightMode';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { logoutUser } from '../../store/slices/authSlice';
+import { useThemeMode } from '../../context/ThemeModeContext';
 import { AuthModal } from '../Auth/AuthModal';
 
 export const HeaderNav: React.FC = () => {
   const location = useLocation();
   const dispatch = useAppDispatch();
+  const { mode, toggleThemeMode } = useThemeMode();
 
   const user = useAppSelector((state) => state.auth.user);
   const bookings = useAppSelector((state) => state.booking.bookings);
@@ -34,15 +51,18 @@ export const HeaderNav: React.FC = () => {
     handleMenuClose();
   };
 
+  const isDark = mode === 'dark';
+
   return (
     <>
       <AppBar
         position="sticky"
         sx={{
-          background: 'rgba(9, 12, 21, 0.85)',
+          background: isDark ? 'rgba(9, 12, 21, 0.85)' : 'rgba(255, 255, 255, 0.85)',
           backdropFilter: 'blur(16px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-          boxShadow: '0 4px 30px rgba(0, 0, 0, 0.5)',
+          borderBottom: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.08)',
+          boxShadow: isDark ? '0 4px 30px rgba(0, 0, 0, 0.5)' : '0 4px 20px rgba(0, 0, 0, 0.05)',
+          transition: 'all 0.3s ease',
         }}
       >
         <Container maxWidth="xl">
@@ -79,7 +99,9 @@ export const HeaderNav: React.FC = () => {
                   fontFamily: '"Bebas Neue", sans-serif',
                   fontSize: '2rem',
                   letterSpacing: '1px',
-                  background: 'linear-gradient(90deg, #FFFFFF 0%, #E50914 100%)',
+                  background: isDark
+                    ? 'linear-gradient(90deg, #FFFFFF 0%, #E50914 100%)'
+                    : 'linear-gradient(90deg, #0F172A 0%, #E50914 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                 }}
@@ -88,15 +110,15 @@ export const HeaderNav: React.FC = () => {
               </Typography>
             </Box>
 
-            {/* Navigation Links & User Menu */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
+            {/* Navigation Links & Control Actions */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 } }}>
               <Button
                 component={RouterLink}
                 to="/"
                 startIcon={<MovieFilterIcon />}
                 sx={{
                   borderRadius: '6px',
-                  color: location.pathname === '/' ? '#E50914' : '#94A3B8',
+                  color: location.pathname === '/' ? '#E50914' : isDark ? '#94A3B8' : '#475569',
                   fontWeight: location.pathname === '/' ? 700 : 500,
                   backgroundColor: location.pathname === '/' ? 'rgba(229, 9, 20, 0.12)' : 'transparent',
                 }}
@@ -114,13 +136,30 @@ export const HeaderNav: React.FC = () => {
                 }
                 sx={{
                   borderRadius: '6px',
-                  color: location.pathname === '/my-tickets' ? '#E50914' : '#94A3B8',
+                  color: location.pathname === '/my-tickets' ? '#E50914' : isDark ? '#94A3B8' : '#475569',
                   fontWeight: location.pathname === '/my-tickets' ? 700 : 500,
                   backgroundColor: location.pathname === '/my-tickets' ? 'rgba(229, 9, 20, 0.12)' : 'transparent',
                 }}
               >
                 Tiket Saya
               </Button>
+
+              {/* Theme Mode Toggle Switcher */}
+              <Tooltip title={isDark ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap'}>
+                <IconButton
+                  onClick={toggleThemeMode}
+                  sx={{
+                    color: isDark ? '#FFD700' : '#0F172A',
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.05)',
+                    borderRadius: '6px',
+                    '&:hover': {
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.1)',
+                    },
+                  }}
+                >
+                  {isDark ? <LightModeIcon sx={{ fontSize: 20 }} /> : <DarkModeIcon sx={{ fontSize: 20 }} />}
+                </IconButton>
+              </Tooltip>
 
               {/* User Account / Auth Control */}
               {user ? (
@@ -142,8 +181,8 @@ export const HeaderNav: React.FC = () => {
                     }
                     sx={{
                       borderRadius: '6px',
-                      color: '#FFF',
-                      backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                      color: isDark ? '#FFF' : '#0F172A',
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
                     }}
                   >
                     {user.name}
@@ -155,15 +194,15 @@ export const HeaderNav: React.FC = () => {
                     slotProps={{
                       paper: {
                         style: {
-                          backgroundColor: '#121726',
+                          backgroundColor: isDark ? '#121726' : '#FFFFFF',
                           borderRadius: '8px',
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
-                          color: '#F8FAFC',
+                          border: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
+                          color: isDark ? '#F8FAFC' : '#0F172A',
                         },
                       },
                     }}
                   >
-                    <MenuItem disabled sx={{ opacity: 1, color: '#94A3B8', fontSize: '0.8rem' }}>
+                    <MenuItem disabled sx={{ opacity: 1, color: 'text.secondary', fontSize: '0.8rem' }}>
                       Signed in as {user.email}
                     </MenuItem>
                     <MenuItem onClick={handleLogout} sx={{ color: '#EF4444', gap: 1 }}>
@@ -188,10 +227,7 @@ export const HeaderNav: React.FC = () => {
       </AppBar>
 
       {/* Auth Modal */}
-      <AuthModal
-        open={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-      />
+      <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </>
   );
 };

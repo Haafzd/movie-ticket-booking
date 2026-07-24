@@ -1,13 +1,12 @@
 import React from 'react';
-import { ThemeProvider, CssBaseline, Box } from '@mui/material';
+import { CssBaseline, Box } from '@mui/material';
 import { Provider } from 'react-redux';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { theme } from './theme/theme';
 import { store } from './store';
+import { ThemeModeProvider } from './context/ThemeModeContext';
 import { HeaderNav } from './components/Common/HeaderNav';
 import { Footer } from './components/Common/Footer';
 
-// Placeholder route containers until page features are built in next tasks
 const CatalogPageLazy = React.lazy(() => import('./pages/CatalogPage'));
 const MovieDetailPageLazy = React.lazy(() => import('./pages/MovieDetailPage'));
 const MyTicketsPageLazy = React.lazy(() => import('./pages/MyTicketsPage'));
@@ -16,7 +15,7 @@ const NotFoundPageLazy = React.lazy(() => import('./pages/NotFoundPage'));
 export const App: React.FC = () => {
   return (
     <Provider store={store}>
-      <ThemeProvider theme={theme}>
+      <ThemeModeProvider>
         <CssBaseline />
         <BrowserRouter>
           <Box
@@ -25,6 +24,8 @@ export const App: React.FC = () => {
               flexDirection: 'column',
               minHeight: '100vh',
               backgroundColor: 'background.default',
+              color: 'text.primary',
+              transition: 'background-color 0.3s ease, color 0.3s ease',
             }}
           >
             <HeaderNav />
@@ -41,7 +42,7 @@ export const App: React.FC = () => {
             <Footer />
           </Box>
         </BrowserRouter>
-      </ThemeProvider>
+      </ThemeModeProvider>
     </Provider>
   );
 };
