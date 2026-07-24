@@ -92,7 +92,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     e.preventDefault();
     setErrorMsg(null);
 
-    // Constraint 1: Time limit check
+    // Constraint 1: Time limit check (30-second timeout)
     if (timeLeft <= 0 || paymentStatus === 'expired') {
       setErrorMsg('Waktu pembayaran telah habis (30 detik). Silakan coba lagi.');
       return;
@@ -101,23 +101,21 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     // Constraint 2: Non-empty & valid number
     const numericNominal = Number(inputNominal);
     if (!inputNominal || isNaN(numericNominal) || numericNominal <= 0) {
-      setErrorMsg('Masukkan nominal pembayaran yang valid (lebih dari Rp 0).');
+      setErrorMsg('Masukkan nominal pembayaran yang valid.');
       return;
     }
 
-    // Constraint 3: Minimum nominal constraint (must equal or exceed total price)
+    // Constraint 3: Strict Exact Payment Constraint (Payment must match exact bill amount)
     if (numericNominal < bookingPayload.totalPrice) {
       setErrorMsg(
-        `Nominal kurang Rp ${(bookingPayload.totalPrice - numericNominal).toLocaleString('id-ID')}! Total tagihan adalah Rp ${bookingPayload.totalPrice.toLocaleString('id-ID')}`
+        `Nominal kurang Rp ${(bookingPayload.totalPrice - numericNominal).toLocaleString('id-ID')}! Pembayaran harus tepat Rp ${bookingPayload.totalPrice.toLocaleString('id-ID')}`
       );
       return;
     }
 
-    // Constraint 4: Maximum nominal constraint (cannot exceed 2x bill amount)
-    const maxAllowed = bookingPayload.totalPrice * 2;
-    if (numericNominal > maxAllowed) {
+    if (numericNominal > bookingPayload.totalPrice) {
       setErrorMsg(
-        `Nominal terlalu besar! Maksimal pembayaran adalah Rp ${maxAllowed.toLocaleString('id-ID')}`
+        `Nominal melebihi total tagihan! Pembayaran harus tepat Rp ${bookingPayload.totalPrice.toLocaleString('id-ID')}`
       );
       return;
     }
@@ -172,7 +170,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                   </Typography>
                 </Box>
                 <Typography variant="caption" color="text.secondary">
-                  Constraint Limit: 30s
+                  Timeout Limit: 30s
                 </Typography>
               </Box>
               <LinearProgress
@@ -201,7 +199,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               </Typography>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
-                  TOTAL TAGIHAN (MINIMAL):
+                  TOTAL HARGA PAS:
                 </Typography>
                 <Typography variant="h6" sx={{ fontWeight: 800, color: isDark ? '#FFD700' : '#D97706' }}>
                   Rp {bookingPayload.totalPrice.toLocaleString('id-ID')}
@@ -286,14 +284,14 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 <TextField
                   fullWidth
                   size="small"
-                  label="Nominal Pembayaran (Rp)"
+                  label="Nominal Pembayaran (Tepat)"
                   type="number"
                   value={inputNominal}
                   onChange={(e) => {
                     setInputNominal(e.target.value);
                     setErrorMsg(null);
                   }}
-                  placeholder={`Min. Rp ${bookingPayload.totalPrice.toLocaleString('id-ID')}`}
+                  placeholder={`Tepat Rp ${bookingPayload.totalPrice.toLocaleString('id-ID')}`}
                 />
                 <Button
                   variant="outlined"
@@ -327,7 +325,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               Pembayaran Berhasil!
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Pembayaran tervalidasi. Mengalihkan langsung ke halaman Tiket Saya...
+              Nominal pembayaran tepat tervalidasi. Mengalihkan langsung ke halaman Tiket Saya...
             </Typography>
           </Box>
         )}
