@@ -53,10 +53,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('qris');
   const [inputNominal, setInputNominal] = useState<string>('');
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('pending');
-  const [timeLeft, setTimeLeft] = useState<number>(30); // 30-second timeout
+  const [timeLeft, setTimeLeft] = useState<number>(30); // 30-second timeout constraint
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Countdown timer 30 seconds
+  // 30-Second Countdown Timer Constraint
   useEffect(() => {
     let timer: ReturnType<typeof setInterval>;
     if (open && paymentStatus === 'pending') {
@@ -92,20 +92,37 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     e.preventDefault();
     setErrorMsg(null);
 
-    const numericNominal = Number(inputNominal);
-    if (!inputNominal || isNaN(numericNominal)) {
-      setErrorMsg('Masukkan nominal pembayaran yang valid.');
+    // Constraint 1: Time limit check
+    if (timeLeft <= 0 || paymentStatus === 'expired') {
+      setErrorMsg('Waktu pembayaran telah habis (30 detik). Silakan coba lagi.');
       return;
     }
 
+    // Constraint 2: Non-empty & valid number
+    const numericNominal = Number(inputNominal);
+    if (!inputNominal || isNaN(numericNominal) || numericNominal <= 0) {
+      setErrorMsg('Masukkan nominal pembayaran yang valid (lebih dari Rp 0).');
+      return;
+    }
+
+    // Constraint 3: Minimum nominal constraint (must equal or exceed total price)
     if (numericNominal < bookingPayload.totalPrice) {
       setErrorMsg(
-        `Nominal kurang! Total tagihan adalah Rp ${bookingPayload.totalPrice.toLocaleString('id-ID')}`
+        `Nominal kurang Rp ${(bookingPayload.totalPrice - numericNominal).toLocaleString('id-ID')}! Total tagihan adalah Rp ${bookingPayload.totalPrice.toLocaleString('id-ID')}`
       );
       return;
     }
 
-    // Payment Successful -> Proceed to ticket issuance!
+    // Constraint 4: Maximum nominal constraint (cannot exceed 2x bill amount)
+    const maxAllowed = bookingPayload.totalPrice * 2;
+    if (numericNominal > maxAllowed) {
+      setErrorMsg(
+        `Nominal terlalu besar! Maksimal pembayaran adalah Rp ${maxAllowed.toLocaleString('id-ID')}`
+      );
+      return;
+    }
+
+    // Payment Successful -> Skip to Success State and issue ticket!
     setPaymentStatus('success');
     setTimeout(() => {
       onPaymentSuccess(bookingPayload);
@@ -138,7 +155,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           Simulasi Pembayaran Tiket
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Selesaikan pembayaran dalam waktu 30 detik
+          Batasi waktu pembayaran maks. 30 detik
         </Typography>
       </DialogTitle>
 
@@ -148,20 +165,20 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             {/* 30-Second Countdown Timer Progress Bar */}
             <Box sx={{ mb: 2.5 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, color: '#EF4444' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, color: timeLeft <= 10 ? '#EF4444' : '#F59E0B' }}>
                   <TimerIcon fontSize="small" />
                   <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
-                    Sisa Waktu: {timeLeft} Detik
+                    Sisa Waktu Pembayaran: {timeLeft}s
                   </Typography>
                 </Box>
                 <Typography variant="caption" color="text.secondary">
-                  Timeout: 30s
+                  Constraint Limit: 30s
                 </Typography>
               </Box>
               <LinearProgress
                 variant="determinate"
                 value={progressPercent}
-                color={timeLeft <= 10 ? 'error' : 'primary'}
+                color={timeLeft <= 10 ? 'error' : 'warning'}
                 sx={{ height: 6, borderRadius: '3px' }}
               />
             </Box>
@@ -184,7 +201,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               </Typography>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
-                  TOTAL TAGIHAN:
+                  TOTAL TAGIHAN (MINIMAL):
                 </Typography>
                 <Typography variant="h6" sx={{ fontWeight: 800, color: isDark ? '#FFD700' : '#D97706' }}>
                   Rp {bookingPayload.totalPrice.toLocaleString('id-ID')}
@@ -241,9 +258,9 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             {/* Instructions depending on method */}
             {paymentMethod === 'qris' ? (
               <Box sx={{ textAlign: 'center', my: 2, p: 2, border: '1px dashed divider', borderRadius: '6px' }}>
-                <QrCode2Icon sx={{ fontSize: 90, color: 'text.primary', opacity: 0.8 }} />
+                <QrCode2Icon sx={{ fontSize: 80, color: 'text.primary', opacity: 0.8 }} />
                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                  Scan QRIS dengan aplikasi m-banking atau e-wallet pilihanmu
+                  Scan Kode QRIS dengan m-banking/e-wallet Anda
                 </Typography>
               </Box>
             ) : (
@@ -257,7 +274,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               </Box>
             )}
 
-            {/* Input Nominal Pembayaran */}
+            {/* Input Nominal Pembayaran & Constraint Alerts */}
             <Box component="form" onSubmit={handleConfirmPayment}>
               {errorMsg && (
                 <Alert severity="error" icon={false} sx={{ mb: 2, borderRadius: '6px' }}>
@@ -269,11 +286,14 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 <TextField
                   fullWidth
                   size="small"
-                  label="Masukkan Nominal Pembayaran (Rp)"
+                  label="Nominal Pembayaran (Rp)"
                   type="number"
                   value={inputNominal}
-                  onChange={(e) => setInputNominal(e.target.value)}
-                  placeholder={`contoh: ${bookingPayload.totalPrice}`}
+                  onChange={(e) => {
+                    setInputNominal(e.target.value);
+                    setErrorMsg(null);
+                  }}
+                  placeholder={`Min. Rp ${bookingPayload.totalPrice.toLocaleString('id-ID')}`}
                 />
                 <Button
                   variant="outlined"
@@ -290,9 +310,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                 variant="contained"
                 size="large"
                 fullWidth
+                disabled={timeLeft <= 0}
                 sx={{ py: 1.2, fontWeight: 800, borderRadius: '6px' }}
               >
-                Konfirmasi Pembayaran
+                Konfirmasi & Bayar Tiket
               </Button>
             </Box>
           </>
@@ -306,7 +327,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               Pembayaran Berhasil!
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Tiket bioskop Anda telah diterbitkan. Mengalihkan ke halaman Tiket Saya...
+              Pembayaran tervalidasi. Mengalihkan langsung ke halaman Tiket Saya...
             </Typography>
           </Box>
         )}
@@ -316,13 +337,13 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           <Box sx={{ textAlign: 'center', py: 3 }}>
             <ErrorIcon sx={{ fontSize: 64, color: '#EF4444', mb: 1 }} />
             <Typography variant="h5" sx={{ fontWeight: 800, color: '#EF4444', mb: 1 }}>
-              Waktu Pembayaran Habis!
+              Waktu Pembayaran Habis (Timeout 30s)!
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Sesi pembayaran telah melebihi batas waktu 30 detik. Pemesanan tiket dibatalkan.
+              Sesi pembayaran melebihi batas waktu 30 detik. Tiket gagal diterbitkan.
             </Typography>
             <Button variant="contained" color="error" onClick={onClose} sx={{ borderRadius: '6px' }}>
-              Tutup & Coba Lagi
+              Tutup & Coba Pemesanan Ulang
             </Button>
           </Box>
         )}
