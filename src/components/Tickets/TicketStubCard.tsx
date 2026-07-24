@@ -5,6 +5,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import QrCode2Icon from '@mui/icons-material/QrCode2';
 import DeleteIcon from '@mui/icons-material/Delete';
 import LocalMoviesIcon from '@mui/icons-material/LocalMovies';
+import EventSeatIcon from '@mui/icons-material/EventSeat';
 import type { TicketBooking } from '../../types';
 
 interface TicketStubCardProps {
@@ -21,6 +22,8 @@ export const TicketStubCard: React.FC<TicketStubCardProps> = ({ booking, onCance
     hour: '2-digit',
     minute: '2-digit',
   });
+
+  const seatDisplay = booking.seats && booking.seats.length > 0 ? booking.seats.join(', ') : 'Umum (Tanpa Kursi)';
 
   return (
     <Card
@@ -96,6 +99,13 @@ export const TicketStubCard: React.FC<TicketStubCardProps> = ({ booking, onCance
               <AccessTimeIcon sx={{ fontSize: 18 }} />
               <Typography variant="body2" sx={{ fontWeight: 700 }}>
                 {booking.schedule}
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, color: '#FFF' }}>
+              <EventSeatIcon sx={{ fontSize: 18, color: '#E50914' }} />
+              <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                Kursi: {seatDisplay}
               </Typography>
             </Box>
 

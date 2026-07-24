@@ -8,7 +8,7 @@ const initialState: FilmState = {
   selectedShow: null,
   loading: false,
   error: null,
-  searchQuery: 'avengers',
+  searchQuery: '', // Empty query loads general popular catalog shows by default
   selectedGenre: 'All',
 };
 

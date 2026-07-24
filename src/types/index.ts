@@ -45,6 +45,7 @@ export interface TicketBooking {
   posterUrl: string | null;
   schedule: string; // e.g. "14:30 WIB", "17:00 WIB", "19:30 WIB", "21:15 WIB"
   quantity: number;
+  seats?: string[]; // e.g. ["A3", "A4"]
   pricePerTicket: number; // Rp 50.000
   totalPrice: number;
   bookingDate: string; // ISO string
