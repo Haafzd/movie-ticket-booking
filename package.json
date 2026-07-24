@@ -1,11 +1,29 @@
 {
-  "name": "movie-ticket-booking",
+  "name": "cineverse-movie-booking",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Modern Movie Ticket Booking Web Application built with React 18, TypeScript, Material UI (MUI) v6, Redux Toolkit, and TVMaze API.",
+  "author": "Haafzd",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Haafzd/movie-ticket-booking.git"
+  },
+  "keywords": [
+    "react",
+    "typescript",
+    "material-ui",
+    "mui",
+    "redux-toolkit",
+    "movie-ticket-booking",
+    "tvmaze-api",
+    "vite"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "type-check": "tsc -b",
     "lint": "oxlint",
     "preview": "vite preview"
   },
