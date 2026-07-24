@@ -14,10 +14,13 @@ import {
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PersonIcon from '@mui/icons-material/Person';
+import PaymentIcon from '@mui/icons-material/Payment';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { bookTicket } from '../../store/slices/bookingSlice';
 import { AuthModal } from '../Auth/AuthModal';
+import { PaymentModal } from '../Payment/PaymentModal';
+import type { PaymentBookingPayload } from '../Payment/PaymentModal';
 import type { Show } from '../../types';
 
 interface BookingFormProps {
@@ -72,7 +75,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
 
   const [selectedDateIndex, setSelectedDateIndex] = useState<number>(0);
   const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
-  
+  const [paymentModalOpen, setPaymentModalOpen] = useState<boolean>(false);
+  const [pendingBookingPayload, setPendingBookingPayload] = useState<PaymentBookingPayload | null>(null);
+
   // Real-time time slot availability calculation
   const timeSlots = useMemo(() => {
     const now = new Date();
@@ -124,27 +129,20 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
     }
   };
 
-  const processTicketBooking = () => {
-    if (!user) return;
+  const preparePayment = () => {
     const fullScheduleStr = `${dateOptions[selectedDateIndex].fullDateStr} - ${selectedTime}`;
+    const payload: PaymentBookingPayload = {
+      show,
+      schedule: fullScheduleStr,
+      dateOnly: dateOptions[selectedDateIndex].fullDateStr,
+      timeOnly: selectedTime,
+      seats: selectedSeats.sort(),
+      quantity,
+      totalPrice,
+    };
 
-    dispatch(
-      bookTicket({
-        userId: user.id,
-        showId: show.id,
-        showTitle: show.name,
-        posterUrl: show.image?.medium || show.image?.original || null,
-        schedule: fullScheduleStr,
-        bookingDateOnly: dateOptions[selectedDateIndex].fullDateStr,
-        bookingTimeOnly: selectedTime,
-        quantity,
-        seats: selectedSeats.sort(),
-        pricePerTicket: PRICE_PER_TICKET,
-        totalPrice,
-      })
-    );
-
-    setShowSuccessToast(true);
+    setPendingBookingPayload(payload);
+    setPaymentModalOpen(true);
   };
 
   const handleBookingSubmit = (e: React.FormEvent) => {
@@ -160,7 +158,33 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
       return;
     }
 
-    processTicketBooking();
+    preparePayment();
+  };
+
+  const handlePaymentSuccess = (payload: PaymentBookingPayload) => {
+    if (!user) return;
+
+    dispatch(
+      bookTicket({
+        userId: user.id,
+        showId: payload.show.id,
+        showTitle: payload.show.name,
+        posterUrl: payload.show.image?.medium || payload.show.image?.original || null,
+        schedule: payload.schedule,
+        bookingDateOnly: payload.dateOnly,
+        bookingTimeOnly: payload.timeOnly,
+        quantity: payload.quantity,
+        seats: payload.seats,
+        pricePerTicket: PRICE_PER_TICKET,
+        totalPrice: payload.totalPrice,
+      })
+    );
+
+    setPaymentModalOpen(false);
+    setShowSuccessToast(true);
+    setTimeout(() => {
+      navigate('/my-tickets');
+    }, 1500);
   };
 
   return (
@@ -432,7 +456,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
               size="large"
               fullWidth
               disabled={quantity === 0}
-              startIcon={!user ? <PersonIcon /> : undefined}
+              startIcon={!user ? <PersonIcon /> : <PaymentIcon />}
               sx={{
                 py: 1.4,
                 fontSize: '1rem',
@@ -441,9 +465,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
               }}
             >
               {!user
-                ? 'Masuk / Daftar untuk Pesan Tiket'
+                ? 'Masuk / Daftar untuk Lanjut Bayar'
                 : quantity > 0
-                ? `Pesan Tiket (${selectedSeats.join(', ')})`
+                ? `Lanjut ke Pembayaran (${selectedSeats.join(', ')})`
                 : 'Pilih Kursi Terlebih Dahulu'}
             </Button>
           </Box>
@@ -468,18 +492,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
               fontWeight: 700,
               borderRadius: '6px',
             }}
-            action={
-              <Button
-                color="inherit"
-                size="small"
-                onClick={() => navigate('/my-tickets')}
-                sx={{ fontWeight: 800, textDecoration: 'underline' }}
-              >
-                Lihat Tiket
-              </Button>
-            }
           >
-            Tiket film "{show.name}" berhasil dipesan!
+            Pembayaran Berhasil! Tiket film "{show.name}" telah diterbitkan.
           </Alert>
         </Snackbar>
       </Card>
@@ -488,7 +502,15 @@ export const BookingForm: React.FC<BookingFormProps> = ({ show }) => {
       <AuthModal
         open={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
-        onSuccess={processTicketBooking}
+        onSuccess={preparePayment}
+      />
+
+      {/* Payment Simulation Modal */}
+      <PaymentModal
+        open={paymentModalOpen}
+        bookingPayload={pendingBookingPayload}
+        onClose={() => setPaymentModalOpen(false)}
+        onPaymentSuccess={handlePaymentSuccess}
       />
     </>
   );
